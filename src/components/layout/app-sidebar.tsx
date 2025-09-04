@@ -1,7 +1,8 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { CircleDollarSign } from 'lucide-react';
+import { IndianRupee } from 'lucide-react';
 import {
   SidebarHeader,
   SidebarContent,
@@ -26,8 +27,8 @@ export default function AppSidebar() {
     <>
       <SidebarHeader>
         <div className="inline-flex items-center gap-2 p-2 font-headline text-lg font-semibold">
-          <CircleDollarSign className="h-6 w-6 text-primary" />
-          <span className="group-data-[collapsible=icon]:hidden">FinWise</span>
+          <IndianRupee className="h-6 w-6 text-primary" />
+          <span className="group-data-[collapsible=icon]:hidden">MManager</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
