@@ -19,8 +19,8 @@ const FinancialAdviceInputSchema = z.object({
 export type FinancialAdviceInput = z.infer<typeof FinancialAdviceInputSchema>;
 
 const FinancialAdviceOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the user\'s financial situation.'),
-  tips: z.array(z.string()).describe('Personalized tips for improving the user\'s financial habits.'),
+  summary: z.string().describe('A concise summary of the user\'s financial situation, limited to a maximum of two sentences.'),
+  tips: z.array(z.string()).describe('A maximum of three personalized tips for improving the user\'s financial habits.'),
 });
 export type FinancialAdviceOutput = z.infer<typeof FinancialAdviceOutputSchema>;
 
@@ -41,7 +41,7 @@ Expense Breakdown:
 - {{key}}: {{{this}}}
 {{/each}}
 
-Based on this information, provide a summary of the user's financial situation and suggest personalized tips to improve their financial habits. Focus on being encouraging and supportive.`, 
+Based on this information, provide a summary of the user's financial situation in no more than two sentences. Then, suggest a maximum of three personalized tips to improve their financial habits. Focus on being encouraging and supportive.`, 
 });
 
 const financialAdviceFlow = ai.defineFlow(
