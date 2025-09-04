@@ -14,12 +14,44 @@ import {
   query,
   orderBy,
   getDoc,
+  where,
 } from 'firebase/firestore';
-import type { Transaction, Budget, Goal, RecurringTransaction } from '@/types';
+import type { Transaction, Budget, Goal, RecurringTransaction, User } from '@/types';
 
 const getGoalKeyword = (goalName: string) => {
     return goalName.split(' ')[0];
 }
+
+// --- User Actions ---
+export async function createUser(userData: Omit<User, 'id'>) {
+    const usersCollection = collection(db, 'users');
+    // Check if username already exists
+    const q = query(usersCollection, where('username', '==', userData.username));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+        throw new Error('Username already exists');
+    }
+    
+    const newDocRef = await addDoc(usersCollection, userData);
+    return { id: newDocRef.id, ...userData };
+}
+
+export async function getUserByUsername(username: string, password?: string): Promise<User | null> {
+    const usersCollection = collection(db, 'users');
+    let q;
+    if (password) {
+        q = query(usersCollection, where('username', '==', username), where('password', '==', password));
+    } else {
+        q = query(usersCollection, where('username', '==', username));
+    }
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+        return null;
+    }
+    const userDoc = snapshot.docs[0];
+    return { id: userDoc.id, ...userDoc.data() } as User;
+}
+
 
 // --- Data Fetching ---
 export async function getData() {

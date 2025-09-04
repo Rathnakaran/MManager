@@ -33,3 +33,11 @@ export interface RecurringTransaction {
   dayOfWeek?: string; // e.g., 'Monday'
   dayOfMonth?: number; // 1-31
 }
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  password?: string; // Should be hashed
+  dateOfBirth: string; // ISO 8601 format
+}
