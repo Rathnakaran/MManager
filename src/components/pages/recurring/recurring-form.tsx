@@ -85,7 +85,7 @@ export default function RecurringForm({ recurring, categories, onFinished }: Rec
         toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
       }
     });
-  };
+  }
 
   return (
     <Form {...form}>
