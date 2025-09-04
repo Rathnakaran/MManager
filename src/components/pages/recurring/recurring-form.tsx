@@ -20,8 +20,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectGroup,
-  SelectLabel,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -46,7 +44,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface RecurringFormProps {
   recurring?: Recurring | null;
-  categories: { budgetCategories: string[], goalCategories: string[] };
+  categories: string[];
   onFinished: () => void;
 }
 
@@ -155,18 +153,9 @@ export default function RecurringForm({ recurring, categories, onFinished }: Rec
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectGroup>
-                                    <SelectLabel>Goal Contributions</SelectLabel>
-                                    {categories.goalCategories.map(cat => (
-                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                    ))}
-                                </SelectGroup>
-                                <SelectGroup>
-                                    <SelectLabel>Budget Categories</SelectLabel>
-                                    {categories.budgetCategories.map(cat => (
-                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                    ))}
-                                </SelectGroup>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                ))}
                                 <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                         </Select>

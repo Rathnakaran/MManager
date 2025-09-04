@@ -49,12 +49,6 @@ export async function getBudgetCategories() {
     return budgets.map(b => b.category);
 }
 
-export async function getGoalCategories() {
-    await delay(100);
-    return goals.map(g => getGoalKeyword(g.name));
-}
-
-
 // --- Transaction Actions ---
 export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
   await delay(500);
