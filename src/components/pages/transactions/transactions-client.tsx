@@ -91,7 +91,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
             const newTransaction: Transaction = { ...transactionData, id: tempId };
             setTransactions(prev => [newTransaction, ...prev]);
             try {
-                const { transaction: savedTransaction } = await addTransaction(transactionData);
+                const savedTransaction = await addTransaction(transactionData);
                 setTransactions(prev => prev.map(t => t.id === tempId ? savedTransaction : t));
                 toast({ title: 'Success', description: 'Transaction added successfully.' });
             } catch (error) {

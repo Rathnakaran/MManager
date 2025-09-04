@@ -13,6 +13,7 @@ import {
   writeBatch,
   query,
   orderBy,
+  getDoc,
 } from 'firebase/firestore';
 import type { Transaction, Budget, Goal, RecurringTransaction } from '@/types';
 
@@ -50,7 +51,7 @@ export async function getBudgetCategories(): Promise<string[]> {
 }
 
 // --- Transaction Actions ---
-export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
+export async function addTransaction(transactionData: Omit<Transaction, 'id'>): Promise<Transaction> {
   const newTransactionRef = await addDoc(collection(db, 'transactions'), transactionData);
   
   // Check if the transaction category is a goal contribution
@@ -68,8 +69,9 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
 
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
-  const newTransaction = { id: newTransactionRef.id, ...transactionData };
-  return { success: true, transaction: newTransaction };
+  
+  const newDoc = await getDoc(newTransactionRef);
+  return { id: newDoc.id, ...newDoc.data() } as Transaction;
 }
 
 export async function updateTransaction(id: string, transactionData: Partial<Transaction>) {
@@ -78,7 +80,8 @@ export async function updateTransaction(id: string, transactionData: Partial<Tra
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
   revalidatePath('/goals');
-  return { success: true, transaction: { id, ...transactionData } };
+  const updatedDoc = await getDoc(transactionRef);
+  return { id: updatedDoc.id, ...updatedDoc.data() } as Transaction;
 }
 
 export async function deleteTransaction(id: string) {
@@ -92,12 +95,12 @@ export async function deleteTransaction(id: string) {
 
 
 // --- Budget Actions ---
-export async function addBudget(budgetData: Omit<Budget, 'id'>) {
+export async function addBudget(budgetData: Omit<Budget, 'id'>): Promise<Budget> {
     const newBudgetRef = await addDoc(collection(db, 'budgets'), budgetData);
     revalidatePath('/budgets');
     revalidatePath('/dashboard');
-    const newBudget = { id: newBudgetRef.id, ...budgetData };
-    return { success: true, budget: newBudget };
+    const newDoc = await getDoc(newBudgetRef);
+    return { id: newDoc.id, ...newDoc.data() } as Budget;
 }
 
 export async function updateBudget(id: string, budgetData: Partial<Budget>) {
@@ -105,7 +108,8 @@ export async function updateBudget(id: string, budgetData: Partial<Budget>) {
     await updateDoc(budgetRef, budgetData);
     revalidatePath('/budgets');
     revalidatePath('/dashboard');
-    return { success: true, budget: {id, ...budgetData} };
+    const updatedDoc = await getDoc(budgetRef);
+    return { id: updatedDoc.id, ...updatedDoc.data() } as Budget;
 }
 
 export async function deleteBudget(id: string) {

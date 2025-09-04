@@ -105,7 +105,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
             const newBudget: Budget = { ...values, id: tempId };
             setBudgets(prev => [...prev, newBudget]);
             try {
-                const { budget: savedBudget } = await addBudget(values);
+                const savedBudget = await addBudget(values);
                 setBudgets(prev => prev.map(b => b.id === tempId ? savedBudget : b));
                 toast({ title: 'Success', description: 'Budget added successfully.' });
             } catch (error) {
