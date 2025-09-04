@@ -20,11 +20,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { getUserByUsername } from '@/lib/actions';
 import { useTransition } from 'react';
 
@@ -116,14 +114,6 @@ export default function LoginPage() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-        <div className="text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link href="/signup" className="text-primary hover:underline">
-            Sign up
-          </Link>
-        </div>
-      </CardFooter>
     </Card>
   );
 }
