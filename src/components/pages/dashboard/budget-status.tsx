@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Transaction, Budget } from '@/types';
@@ -32,7 +33,7 @@ export function BudgetStatus({ transactions, budgets }: BudgetStatusProps) {
     <Card>
       <CardHeader>
         <CardTitle>Budget vs. Actuals</CardTitle>
-        <CardDescription>"Ithu epdi irukku?"</CardDescription>
+        <CardDescription>Hukum! Stay in control of your spending.</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px]">
@@ -60,3 +61,4 @@ export function BudgetStatus({ transactions, budgets }: BudgetStatusProps) {
     </Card>
   );
 }
+

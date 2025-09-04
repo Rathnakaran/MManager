@@ -65,10 +65,10 @@ export default function GoalForm({ goal, onFinished }: GoalFormProps) {
         };
         if (goal) {
           await updateGoal(goal.id, goalData);
-          toast({ title: 'Success', description: 'Goal updated successfully. "Adan summaava sonnanga?!"' });
+          toast({ title: 'Success', description: 'Goal updated successfully. "Vaathi Coming!"' });
         } else {
           await addGoal(goalData);
-          toast({ title: 'Success', description: 'Goal added successfully. "Now, we are back to form!"' });
+          toast({ title: 'Success', description: 'Goal added successfully. "It\'s a brand!"' });
         }
         onFinished();
         form.reset();

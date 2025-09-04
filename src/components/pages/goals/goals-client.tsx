@@ -38,12 +38,12 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this goal? "Mudinja thodu paapom!"')) return;
+    if (!confirm('Are you sure you want to delete this goal?')) return;
     try {
       await deleteGoal(id);
       toast({
         title: 'Success!',
-        description: 'Goal deleted. "Semma gethu!"',
+        description: 'Goal deleted. "Mind voice: Annan innoru thadava koopdapattar!"',
       });
     } catch (error) {
       toast({
@@ -71,7 +71,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
           <SheetContent onInteractOutside={handleSheetClose} onEscapeKeyDown={handleSheetClose}>
             <SheetHeader>
               <SheetTitle>{selectedGoal ? 'Edit Goal' : 'Add New Goal'}</SheetTitle>
-              <CardDescription>"Enna da plan panringa?"</CardDescription>
+              <CardDescription>"Sketch pota, sketchu!"</CardDescription>
             </SheetHeader>
             <GoalForm
               goal={selectedGoal}
@@ -86,7 +86,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
                     <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
                         <Target className="w-8 h-8 text-primary" />
                     </div>
-                    <CardTitle>"Oru plan pannanum, panradhula a Gud plan pannanum"</CardTitle>
+                    <CardTitle>"Enna da, plan eh illama vandhuruka?"</CardTitle>
                     <CardDescription>You haven't set any goals yet. Click "Add Goal" to get started!</CardDescription>
                 </CardHeader>
             </Card>
@@ -129,7 +129,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
                             </div>
                             <Progress value={progress} />
                         </div>
-                        <p className="text-xs text-muted-foreground pt-1">{progress.toFixed(0)}% complete. "Verithanam!"</p>
+                        <p className="text-xs text-muted-foreground pt-1">{progress.toFixed(0)}% complete. "Therikka vidalama!"</p>
                     </CardContent>
                     </Card>
                 );

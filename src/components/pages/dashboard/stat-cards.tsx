@@ -31,7 +31,7 @@ export function StatCards({ totalSpent, remainingBudget, totalBudget }: StatCard
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{formatCurrency(totalSpent)}</div>
-                        <p className="text-xs text-muted-foreground">"Valaipechu la onnum korachal illa..."</p>
+                        <p className="text-xs text-muted-foreground">"Rules are meant to be broken."</p>
                     </CardContent>
                 </Card>
                 <Card>
