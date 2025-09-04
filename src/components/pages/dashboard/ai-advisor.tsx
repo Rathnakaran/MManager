@@ -34,7 +34,7 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
         setAdvice(result);
       } catch (error) {
         console.error('Failed to get financial advice:', error);
-        setAdvice({ summary: 'Could not load financial advice at this time.', tips: [] });
+        setAdvice({ summary: 'Could not load financial advice at this time.' });
       } finally {
         setIsLoading(false);
       }
@@ -58,22 +58,10 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
           <div className="space-y-4">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
-            <div className="space-y-2 pt-4">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
-            </div>
           </div>
         ) : advice ? (
           <div>
             <p className="mb-4 text-sm">{advice.summary}</p>
-            {advice.tips.length > 0 && (
-              <ul className="space-y-2 list-disc pl-5 text-sm">
-                {advice.tips.map((tip, index) => (
-                  <li key={index}>{tip}</li>
-                ))}
-              </ul>
-            )}
           </div>
         ) : null}
       </CardContent>

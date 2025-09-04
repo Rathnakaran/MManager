@@ -19,8 +19,7 @@ const FinancialAdviceInputSchema = z.object({
 export type FinancialAdviceInput = z.infer<typeof FinancialAdviceInputSchema>;
 
 const FinancialAdviceOutputSchema = z.object({
-  summary: z.string().describe("A concise summary of the user's financial situation, in Thanglish (Tamil-English mix). The summary must be exactly two sentences."),
-  tips: z.array(z.string()).describe('A maximum of three personalized tips for improving the user\'s financial habits, in Thanglish (Tamil-English mix).'),
+  summary: z.string().describe("A concise, two-line summary of the user's financial situation, in Thanglish (Tamil-English mix)."),
 });
 export type FinancialAdviceOutput = z.infer<typeof FinancialAdviceOutputSchema>;
 
@@ -32,7 +31,7 @@ const prompt = ai.definePrompt({
   name: 'financialAdvicePrompt',
   input: {schema: FinancialAdviceInputSchema},
   output: {schema: FinancialAdviceOutputSchema},
-  prompt: `You are a friendly and helpful AI financial advisor from Chennai. Your responses must be in Thanglish (a mix of Tamil and English). Analyze the user's spending data and provide a concise summary and personalized tips. Keep it fun and encouraging.
+  prompt: `You are a friendly and helpful AI financial advisor from Chennai. Your responses must be in Thanglish (a mix of Tamil and English). Analyze the user's spending data and provide a concise summary. Keep it fun and encouraging.
 
 Total Spent: {{{totalSpent}}}
 Remaining Budget: {{{remainingBudget}}}
@@ -41,7 +40,7 @@ Expense Breakdown:
 - {{key}}: {{{this}}}
 {{/each}}
 
-Based on this information, provide a summary of the user's financial situation that is exactly two sentences long. Then, suggest a maximum of three personalized tips to improve their financial habits. Make sure the entire response is in Thanglish. For example: "Semma spending, thalaiva! Budget-a konjam paathu handle pannunga."`, 
+Based on this information, provide a concise, two-line summary of the user's financial situation. The entire response must be in Thanglish. For example: "Semma spending, thalaiva! Budget-a konjam paathu handle pannunga."`, 
 });
 
 const financialAdviceFlow = ai.defineFlow(
