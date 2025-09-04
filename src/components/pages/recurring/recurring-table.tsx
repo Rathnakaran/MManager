@@ -1,6 +1,7 @@
+
 'use client';
 
-import type { Transaction } from '@/types';
+import type { Recurring } from '@/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import {
   DropdownMenu,
@@ -11,26 +12,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal } from 'lucide-react';
-import { deleteTransaction } from '@/lib/actions';
-import { toast } from '@/hooks/use-toast';
-
-const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
-    try {
-      await deleteTransaction(id);
-      toast({
-        title: 'Success',
-        description: 'Transaction deleted successfully.',
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete transaction.',
-      });
-    }
-  };
-
+import { deleteRecurring } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
+import { DataTable } from '@/components/pages/transactions/data-table';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
@@ -40,15 +24,27 @@ const formatDate = (dateString: string) =>
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    timeZone: 'UTC' // To prevent off-by-one day errors
+    timeZone: 'UTC'
   });
+  
+const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this recurring transaction?')) return;
+    try {
+      await deleteRecurring(id);
+      toast({
+        title: 'Success',
+        description: 'Recurring transaction deleted successfully.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete recurring transaction.',
+      });
+    }
+  };
 
-export const columns = (onEdit: (transaction: Transaction) => void): ColumnDef<Transaction>[] => [
-  {
-    accessorKey: 'date',
-    header: 'Date',
-    cell: ({ row }) => formatDate(row.original.date),
-  },
+const columns = (onEdit: (recurring: Recurring) => void): ColumnDef<Recurring>[] => [
   {
     accessorKey: 'description',
     header: 'Description',
@@ -57,6 +53,16 @@ export const columns = (onEdit: (transaction: Transaction) => void): ColumnDef<T
     accessorKey: 'category',
     header: 'Category',
     cell: ({ row }) => <Badge variant="outline">{row.original.category}</Badge>,
+  },
+  {
+    accessorKey: 'frequency',
+    header: 'Frequency',
+    cell: ({ row }) => <span className="capitalize">{row.original.frequency}</span>
+  },
+   {
+    accessorKey: 'startDate',
+    header: 'Starts On',
+    cell: ({ row }) => formatDate(row.original.startDate),
   },
   {
     accessorKey: 'amount',
@@ -79,7 +85,7 @@ export const columns = (onEdit: (transaction: Transaction) => void): ColumnDef<T
   {
     id: 'actions',
     cell: ({ row }) => {
-      const transaction = row.original;
+      const recurring = row.original;
       return (
         <div className="text-right">
             <DropdownMenu>
@@ -90,12 +96,12 @@ export const columns = (onEdit: (transaction: Transaction) => void): ColumnDef<T
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(transaction)}>
+                <DropdownMenuItem onClick={() => onEdit(recurring)}>
                     Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                     className="text-destructive"
-                    onClick={() => handleDelete(transaction.id)}
+                    onClick={() => handleDelete(recurring.id)}
                     >
                     Delete
                 </DropdownMenuItem>
@@ -106,3 +112,12 @@ export const columns = (onEdit: (transaction: Transaction) => void): ColumnDef<T
     },
   },
 ];
+
+interface RecurringTableProps {
+    data: Recurring[],
+    onEdit: (recurring: Recurring) => void
+}
+
+export default function RecurringTable({ data, onEdit }: RecurringTableProps) {
+  return <DataTable columns={columns(onEdit)} data={data} />;
+}

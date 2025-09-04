@@ -54,7 +54,7 @@ export default function BudgetsClient({ initialBudgets }: BudgetsClientProps) {
     }
   };
   
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
   return (
     <div className="space-y-4">

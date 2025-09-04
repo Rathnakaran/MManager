@@ -4,47 +4,49 @@ const today = new Date();
 const currentMonth = today.toISOString().slice(0, 7);
 
 export const sampleBudgets: Omit<Budget, 'id'>[] = [
-  { category: 'Home Loan EMI', amount: 1200, icon: 'Home' },
-  { category: 'Credit Card Loan', amount: 500, icon: 'CreditCard' },
-  { category: 'Shopping', amount: 300, icon: 'ShoppingBag' },
-  { category: 'Investments', amount: 1000, icon: 'PiggyBank' },
-  { category: 'Family Support', amount: 400, icon: 'Users' },
-  { category: 'Donation', amount: 100, icon: 'Heart' },
-  { category: 'House Rent', amount: 800, icon: 'Home' },
-  { category: 'Essentials', amount: 250, icon: 'ShoppingCart' },
-  { category: 'Hometown Travel', amount: 150, icon: 'Plane' },
-  { category: 'Outside Food', amount: 200, icon: 'Utensils' },
-  { category: 'Trips & Moi', amount: 300, icon: 'Gift' },
-  { category: 'Local Transport', amount: 100, icon: 'Car' },
-  { category: 'Medical', amount: 100, icon: 'HeartPulse' },
-  { category: 'Lifestyle', amount: 150, icon: 'Briefcase' },
-  { category: 'Others/Unexpected', amount: 200, icon: 'Receipt' },
+  { category: 'Groceries', amount: 400, icon: 'ShoppingCart' },
+  { category: 'Dining Out', amount: 250, icon: 'Utensils' },
+  { category: 'Transportation', amount: 150, icon: 'Car' },
+  { category: 'Rent/Mortgage', amount: 1500, icon: 'Home' },
+  { category: 'Entertainment', amount: 100, icon: 'Ticket' },
+  { category: 'Health', amount: 200, icon: 'HeartPulse' },
+  { category: 'Apparel', amount: 150, icon: 'ShoppingBag' },
+  { category: 'Bills & Utilities', amount: 200, icon: 'Receipt' },
+  { category: 'Personal Care', amount: 75, icon: 'Heart' },
+  { category: 'Gifts & Donations', amount: 50, icon: 'Gift' },
+  { category: 'Travel', amount: 300, icon: 'Plane' },
+  { category: 'Education', amount: 100, icon: 'Briefcase' },
+  { category: 'Kids', amount: 200, icon: 'Users' },
+  { category: 'Pets', amount: 75, icon: 'Dog' },
+  { category: 'Investments', amount: 500, icon: 'PiggyBank' },
+  { category: 'Miscellaneous', amount: 100, icon: 'CircleDollarSign' },
 ];
 
 export const sampleTransactions: Omit<Transaction, 'id'>[] = [
-  { date: `${currentMonth}-02`, description: "Trader Joe's", amount: 125.50, type: 'expense', category: 'Essentials' },
-  { date: `${currentMonth}-03`, description: "Monthly Salary", amount: 6000, type: 'income', category: 'Salary' },
-  { date: `${currentMonth}-05`, description: 'Rent Payment', amount: 800, type: 'expense', category: 'House Rent' },
-  { date: `${currentMonth}-07`, description: 'Dinner with friends', amount: 85.00, type: 'expense', category: 'Outside Food' },
-  { date: `${currentMonth}-10`, description: 'Movie tickets', amount: 30.00, type: 'expense', category: 'Lifestyle' },
-  { date: `${currentMonth}-12`, description: 'Uber ride', amount: 22.45, type: 'expense', category: 'Local Transport' },
-  { date: `${currentMonth}-15`, description: 'H&M', amount: 95.80, type: 'expense', category: 'Shopping' },
-  { date: `${currentMonth}-18`, description: 'Pharmacy', amount: 45.00, type: 'expense', category: 'Medical' },
-  { date: `${currentMonth}-20`, description: 'Groceries', amount: 92.30, type: 'expense', category: 'Essentials' },
-  { date: `${currentMonth}-21`, description: 'Home Loan EMI', amount: 1200, type: 'expense', category: 'Home Loan EMI' },
-  { date: `${currentMonth}-22`, description: 'Donation to Charity', amount: 100, type: 'expense', category: 'Donation' },
+  { date: `${currentMonth}-02`, description: "BigBasket", amount: 3500, type: 'expense', category: 'Groceries' },
+  { date: `${currentMonth}-03`, description: "Monthly Salary", amount: 75000, type: 'income', category: 'Salary' },
+  { date: `${currentMonth}-05`, description: 'House Rent', amount: 20000, type: 'expense', category: 'Rent/Mortgage' },
+  { date: `${currentMonth}-07`, description: 'Dinner at Anjappar', amount: 1200, type: 'expense', category: 'Dining Out' },
+  { date: `${currentMonth}-10`, description: 'LEO movie tickets', amount: 500, type: 'expense', category: 'Entertainment' },
+  { date: `${currentMonth}-12`, description: 'Ola ride to office', amount: 250, type: 'expense', category: 'Transportation' },
+  { date: `${currentMonth}-15`, description: 'Nalli Silks', amount: 4500, type: 'expense', category: 'Apparel' },
+  { date: `${currentMonth}-18`, description: 'Apollo Pharmacy', amount: 750, type: 'expense', category: 'Health' },
+  { date: `${currentMonth}-20`, description: 'More Groceries', amount: 1500, type: 'expense', category: 'Groceries' },
+  { date: `${currentMonth}-21`, description: 'Electricity Bill', amount: 800, type: 'expense', category: 'Bills & Utilities' },
+  { date: `${currentMonth}-22`, description: 'Donation to temple', amount: 501, type: 'expense', category: 'Gifts & Donations' },
 ];
 
 export const sampleGoals: Omit<Goal, 'id'>[] = [
-  { name: 'Vacation to Hawaii', targetAmount: 5000, currentAmount: 1200, targetDate: new Date(today.getFullYear() + 1, 5, 1).toISOString() },
-  { name: 'New Laptop', targetAmount: 2000, currentAmount: 1800, targetDate: new Date(today.getFullYear(), today.getMonth() + 2, 1).toISOString() },
-  { name: 'Emergency Fund', targetAmount: 10000, currentAmount: 6500, targetDate: new Date(today.getFullYear() + 2, 0, 1).toISOString() },
+  { name: 'Goa Trip with friends', targetAmount: 40000, currentAmount: 15000, targetDate: new Date(today.getFullYear(), today.getMonth() + 6, 1).toISOString() },
+  { name: 'New iPhone 15', targetAmount: 80000, currentAmount: 25000, targetDate: new Date(today.getFullYear(), today.getMonth() + 4, 1).toISOString() },
+  { name: 'Emergency Fund', targetAmount: 100000, currentAmount: 65000, targetDate: new Date(today.getFullYear() + 1, 0, 1).toISOString() },
 ];
 
 export const sampleRecurring: Omit<Recurring, 'id'>[] = [
-    { description: 'Monthly Salary', amount: 6000, type: 'income', category: 'Salary', frequency: 'monthly', startDate: `${today.getFullYear()}-01-01` },
-    { description: 'Netflix Subscription', amount: 15.99, type: 'expense', category: 'Lifestyle', frequency: 'monthly', startDate: `${today.getFullYear()}-01-01` },
-    { description: 'Gym Membership', amount: 40.00, type: 'expense', category: 'Lifestyle', frequency: 'monthly', startDate: `${today.getFullYear()}-01-01` },
+    { description: 'Monthly Salary', amount: 75000, type: 'income', category: 'Salary', frequency: 'monthly', startDate: `${today.getFullYear()}-01-01` },
+    { description: 'Netflix Subscription', amount: 649, type: 'expense', category: 'Entertainment', frequency: 'monthly', startDate: `${today.getFullYear()}-01-01` },
+    { description: 'Cult.fit Membership', amount: 1500, type: 'expense', category: 'Health', frequency: 'monthly', startDate: `${today.getFullYear()}-01-01` },
+    { description: 'SIP Investment', amount: 10000, type: 'expense', category: 'Investments', frequency: 'monthly', startDate: `${today.getFullYear()}-01-01` },
 ];
 
 export const getBudgetCategories = () => sampleBudgets.map(b => b.category);

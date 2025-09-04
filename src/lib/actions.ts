@@ -54,6 +54,7 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
   transactions.unshift(newTransaction);
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
+  revalidatePath('/recurring');
   return { success: true, transaction: newTransaction };
 }
 
@@ -64,6 +65,7 @@ export async function updateTransaction(id: string, transactionData: Partial<Tra
     transactions[index] = { ...transactions[index], ...transactionData };
     revalidatePath('/transactions');
     revalidatePath('/dashboard');
+    revalidatePath('/recurring');
     return { success: true, transaction: transactions[index] };
   }
   return { success: false, message: 'Transaction not found' };
@@ -74,6 +76,7 @@ export async function deleteTransaction(id: string) {
   transactions = transactions.filter(t => t.id !== id);
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
+  revalidatePath('/recurring');
   return { success: true };
 }
 
@@ -111,17 +114,83 @@ export async function deleteBudget(id: string) {
     return { success: true };
 }
 
-// --- Placeholder actions for other features ---
-
+// --- Goal Actions ---
 export async function getGoals() {
   await delay(200);
   return goals;
 }
 
+export async function addGoal(goalData: Omit<Goal, 'id'>) {
+  await delay(500);
+  const newGoal: Goal = {
+    ...goalData,
+    id: `goal-${Date.now()}`,
+  };
+  goals.push(newGoal);
+  revalidatePath('/goals');
+  revalidatePath('/dashboard');
+  return { success: true, goal: newGoal };
+}
+
+export async function updateGoal(id: string, goalData: Partial<Goal>) {
+  await delay(500);
+  const index = goals.findIndex(g => g.id === id);
+  if (index !== -1) {
+    goals[index] = { ...goals[index], ...goalData };
+    revalidatePath('/goals');
+    revalidatePath('/dashboard');
+    return { success: true, goal: goals[index] };
+  }
+  return { success: false, message: 'Goal not found' };
+}
+
+export async function deleteGoal(id: string) {
+  await delay(500);
+  goals = goals.filter(g => g.id !== id);
+  revalidatePath('/goals');
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+
+// --- Recurring Actions ---
 export async function getRecurring() {
   await delay(200);
   return recurring;
 }
+
+export async function addRecurring(recurringData: Omit<Recurring, 'id'>) {
+    await delay(500);
+    const newRecurring: Recurring = {
+        ...recurringData,
+        id: `recur-${Date.now()}`,
+    };
+    recurring.push(newRecurring);
+    revalidatePath('/recurring');
+    revalidatePath('/dashboard');
+    return { success: true, recurring: newRecurring };
+}
+
+export async function updateRecurring(id: string, recurringData: Partial<Recurring>) {
+    await delay(500);
+    const index = recurring.findIndex(r => r.id === id);
+    if (index !== -1) {
+        recurring[index] = { ...recurring[index], ...recurringData };
+        revalidatePath('/recurring');
+        revalidatePath('/dashboard');
+        return { success: true, recurring: recurring[index] };
+    }
+    return { success: false, message: 'Recurring transaction not found' };
+}
+
+export async function deleteRecurring(id: string) {
+    await delay(500);
+    recurring = recurring.filter(r => r.id !== id);
+    revalidatePath('/recurring');
+    revalidatePath('/dashboard');
+    return { success: true };
+}
+
 
 export async function importTransactions(data: any[]) {
     await delay(1000);

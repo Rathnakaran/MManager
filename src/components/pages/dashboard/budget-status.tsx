@@ -18,7 +18,7 @@ interface BudgetStatusProps {
 }
 
 export function BudgetStatus({ transactions, budgets }: BudgetStatusProps) {
-    const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
   const budgetWithSpending = budgets.map(budget => {
     const spent = transactions
@@ -32,7 +32,7 @@ export function BudgetStatus({ transactions, budgets }: BudgetStatusProps) {
     <Card>
       <CardHeader>
         <CardTitle>Budget vs. Actuals</CardTitle>
-        <CardDescription>How you're tracking against your budget.</CardDescription>
+        <CardDescription>"Ithu epdi irukku?"</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px]">
