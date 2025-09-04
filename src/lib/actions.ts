@@ -73,9 +73,11 @@ async function seedDatabase() {
 // --- Data Fetching ---
 export async function getData() {
   await seedDatabase();
-  const transactions = await getTransactions();
-  const budgets = await getBudgets();
-  const goals = await getGoals();
+  const [transactions, budgets, goals] = await Promise.all([
+    getTransactions(),
+    getBudgets(),
+    getGoals(),
+  ]);
   return { transactions, budgets, goals };
 }
 
@@ -93,8 +95,9 @@ export async function getBudgets(): Promise<Budget[]> {
 }
 
 export async function getBudgetCategories(): Promise<string[]> {
-    const budgets = await getBudgets();
-    return budgets.map(b => b.category);
+    const budgetsCollection = collection(db, 'budgets');
+    const snapshot = await getDocs(budgetsCollection);
+    return snapshot.docs.map(doc => doc.data().category as string);
 }
 
 // --- Transaction Actions ---
@@ -169,8 +172,9 @@ export async function getGoals(): Promise<Goal[]> {
 }
 
 export async function getGoalCategories(): Promise<string[]> {
-    const goals = await getGoals();
-    return goals.map(g => getGoalKeyword(g.name));
+    const goalsCollection = collection(db, 'goals');
+    const snapshot = await getDocs(goalsCollection);
+    return snapshot.docs.map(doc => getGoalKeyword(doc.data().name as string));
 }
 
 export async function addGoal(goalData: Omit<Goal, 'id'>) {
