@@ -8,7 +8,13 @@ import { ExpenseChart } from './charts';
 import { BudgetStatus } from './budget-status';
 import { AiAdvisor } from './ai-advisor';
 import { GoalProgress } from './goal-progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface DashboardClientProps {
   transactions: Transaction[];
@@ -25,13 +31,18 @@ const welcomeMessages = [
   "Kalakunga, Sir!",
 ];
 
+const getCurrentMonthValue = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
 export default function DashboardClient({
   transactions,
   budgets,
   goals,
 }: DashboardClientProps) {
   const [welcomeMessage, setWelcomeMessage] = useState(welcomeMessages[0]);
-  const [view, setView] = useState<'monthly' | 'yearly'>('monthly');
+  const [view, setView] = useState<string>(getCurrentMonthValue());
 
   useEffect(() => {
     // This runs only on the client, after the initial render, to avoid hydration mismatch
@@ -39,22 +50,28 @@ export default function DashboardClient({
     setWelcomeMessage(welcomeMessages[randomIndex]);
   }, []);
 
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    transactions.forEach(t => {
+        months.add(t.date.substring(0, 7)); // 'YYYY-MM'
+    });
+    return Array.from(months).sort().reverse();
+  }, [transactions]);
+
   const filteredTransactions = useMemo(() => {
     const now = new Date();
-    if (view === 'monthly') {
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-      return transactions.filter(t => {
-        const transactionDate = new Date(t.date);
-        return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
-      });
-    }
-    // Yearly view
     const currentYear = now.getFullYear();
-    return transactions.filter(t => {
-        const transactionDate = new Date(t.date);
-        return transactionDate.getFullYear() === currentYear;
-    });
+
+    if (view === 'yearly') {
+        return transactions.filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getFullYear() === currentYear;
+        });
+    }
+
+    // Month view 'YYYY-MM'
+    return transactions.filter(t => t.date.startsWith(view));
+
   }, [transactions, view]);
 
   const { totalSpent, expenseBreakdown } = useMemo(() => {
@@ -73,22 +90,39 @@ export default function DashboardClient({
   }, [filteredTransactions]);
 
   const { totalBudget, remainingBudget } = useMemo(() => {
-    const multiplier = view === 'yearly' ? 12 : 1;
+    const isYearly = view === 'yearly';
+    const multiplier = isYearly ? 12 : 1;
+    
+    // For yearly view, sum up all monthly budgets and multiply by 12.
+    // For monthly view, it's just the sum of monthly budgets.
     const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0) * multiplier;
+    
     const remainingBudget = totalBudget - totalSpent;
     return { totalBudget, remainingBudget };
   }, [budgets, totalSpent, view]);
 
+  const formatMonth = (monthStr: string) => {
+    const [year, month] = monthStr.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+  };
+
   return (
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h1 className="text-2xl font-bold font-headline">{welcomeMessage}</h1>
-            <Tabs value={view} onValueChange={(value) => setView(value as 'monthly' | 'yearly')} className="w-full sm:w-auto">
-                <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
-                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                    <TabsTrigger value="yearly">Yearly</TabsTrigger>
-                </TabsList>
-            </Tabs>
+            <h1 className="text-xl font-bold font-headline">{welcomeMessage}</h1>
+            <Select value={view} onValueChange={setView}>
+                <SelectTrigger className="w-full sm:w-[220px]">
+                    <SelectValue placeholder="Select a period" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="yearly">This Year ({new Date().getFullYear()})</SelectItem>
+                    {availableMonths.map(month => (
+                        <SelectItem key={month} value={month}>
+                            {formatMonth(month)}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
       </div>
 
       <StatCards

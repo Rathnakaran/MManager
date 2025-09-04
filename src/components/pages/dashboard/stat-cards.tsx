@@ -10,7 +10,7 @@ interface StatCardsProps {
   totalSpent: number;
   remainingBudget: number;
   totalBudget: number;
-  view: 'monthly' | 'yearly';
+  view: string; // 'yearly' or 'YYYY-MM'
 }
 
 export function StatCards({ totalSpent, remainingBudget, totalBudget, view }: StatCardsProps) {
@@ -22,11 +22,12 @@ export function StatCards({ totalSpent, remainingBudget, totalBudget, view }: St
     }, [totalSpent, totalBudget]);
 
     const periodText = useMemo(() => {
-        const now = new Date();
-        if (view === 'monthly') {
-            return `for ${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
+        if (view === 'yearly') {
+            return `for ${new Date().getFullYear()}`;
         }
-        return `for ${now.getFullYear()}`;
+        const [year, month] = view.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return `for ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}`;
     }, [view]);
 
     return (
@@ -57,7 +58,7 @@ export function StatCards({ totalSpent, remainingBudget, totalBudget, view }: St
                     <BarChart className="h-5 w-5 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                     <p className="text-sm text-muted-foreground mb-2">You've spent <span className="font-bold text-foreground">{budgetProgress.toFixed(0)}%</span> of your {view} budget.</p>
+                     <p className="text-sm text-muted-foreground mb-2">You've spent <span className="font-bold text-foreground">{budgetProgress.toFixed(0)}%</span> of your budget.</p>
                      <Progress value={budgetProgress} aria-label={`${budgetProgress.toFixed(0)}% of budget spent`} className="h-2" />
                 </CardContent>
             </Card>

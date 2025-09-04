@@ -16,16 +16,16 @@ import { useMemo } from 'react';
 interface BudgetStatusProps {
   transactions: Transaction[];
   budgets: Budget[];
-  view: 'monthly' | 'yearly';
+  view: string; // 'yearly' or 'YYYY-MM'
 }
 
 export function BudgetStatus({ transactions, budgets, view }: BudgetStatusProps) {
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
   const budgetWithSpending = useMemo(() => {
-    const multiplier = view === 'yearly' ? 12 : 1;
+    const isYearly = view === 'yearly';
     return budgets.map(budget => {
-      const totalBudget = budget.amount * multiplier;
+      const totalBudget = budget.amount * (isYearly ? 12 : 1);
       const spent = transactions
         .filter(t => t.type === 'expense' && t.category === budget.category)
         .reduce((sum, t) => sum + t.amount, 0);
@@ -36,11 +36,12 @@ export function BudgetStatus({ transactions, budgets, view }: BudgetStatusProps)
   }, [budgets, transactions, view]);
 
   const periodText = useMemo(() => {
-    const now = new Date();
-    if (view === 'monthly') {
-        return `Are you a king or a beggar this ${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}?`;
+    if (view === 'yearly') {
+        return `How is your spending for the year ${new Date().getFullYear()}?`;
     }
-    return `How is your spending for the year ${now.getFullYear()}?`;
+    const [year, month] = view.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return `Are you a king or a beggar this ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}?`;
   }, [view]);
 
   return (
