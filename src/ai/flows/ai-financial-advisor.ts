@@ -19,8 +19,8 @@ const FinancialAdviceInputSchema = z.object({
 export type FinancialAdviceInput = z.infer<typeof FinancialAdviceInputSchema>;
 
 const FinancialAdviceOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the user\'s financial situation, limited to a maximum of two sentences.'),
-  tips: z.array(z.string()).describe('A maximum of three personalized tips for improving the user\'s financial habits.'),
+  summary: z.string().describe('A concise summary of the user\'s financial situation, limited to a maximum of two sentences, in Thanglish (Tamil-English mix).'),
+  tips: z.array(z.string()).describe('A maximum of three personalized tips for improving the user\'s financial habits, in Thanglish (Tamil-English mix).'),
 });
 export type FinancialAdviceOutput = z.infer<typeof FinancialAdviceOutputSchema>;
 
@@ -32,7 +32,7 @@ const prompt = ai.definePrompt({
   name: 'financialAdvicePrompt',
   input: {schema: FinancialAdviceInputSchema},
   output: {schema: FinancialAdviceOutputSchema},
-  prompt: `You are a friendly and helpful AI financial advisor. Analyze the user's spending data and provide a concise summary and personalized tips.
+  prompt: `You are a friendly and helpful AI financial advisor from Chennai. Your responses must be in Thanglish (a mix of Tamil and English). Analyze the user's spending data and provide a concise summary and personalized tips. Keep it fun and encouraging.
 
 Total Spent: {{{totalSpent}}}
 Remaining Budget: {{{remainingBudget}}}
@@ -41,7 +41,7 @@ Expense Breakdown:
 - {{key}}: {{{this}}}
 {{/each}}
 
-Based on this information, provide a summary of the user's financial situation in no more than two sentences. Then, suggest a maximum of three personalized tips to improve their financial habits. Focus on being encouraging and supportive.`, 
+Based on this information, provide a summary of the user's financial situation in no more than two sentences. Then, suggest a maximum of three personalized tips to improve their financial habits. Make sure the entire response is in Thanglish. For example: "Semma spending, thalaiva! Budget-a konjam paathu handle pannunga."`, 
 });
 
 const financialAdviceFlow = ai.defineFlow(
