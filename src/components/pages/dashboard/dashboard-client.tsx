@@ -5,6 +5,7 @@ import { StatCards } from './stat-cards';
 import { ExpenseChart } from './charts';
 import { BudgetStatus } from './budget-status';
 import { AiAdvisor } from './ai-advisor';
+import { GoalProgress } from './goal-progress';
 
 interface DashboardClientProps {
   transactions: Transaction[];
@@ -15,6 +16,7 @@ interface DashboardClientProps {
 export default function DashboardClient({
   transactions,
   budgets,
+  goals,
 }: DashboardClientProps) {
   const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
   const totalSpent = transactions
@@ -39,6 +41,9 @@ export default function DashboardClient({
         remainingBudget={remainingBudget}
         totalBudget={totalBudget}
       />
+      <div>
+        <GoalProgress goals={goals} />
+      </div>
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <ExpenseChart data={expenseBreakdown} />
