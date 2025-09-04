@@ -17,6 +17,7 @@ import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 const tamilQuotes = [
   "Nama Oru Thadava Mudivu Panita, Aprom Nama Pecha Nameye Kekkamattom.",
@@ -29,10 +30,18 @@ const tamilQuotes = [
 export default function SettingsPage() {
   const [quote, setQuote] = useState(tamilQuotes[0]);
   const [dob, setDob] = useState<Date | undefined>(new Date('1990-01-01'));
+  const { toast } = useToast();
 
   useEffect(() => {
     setQuote(tamilQuotes[Math.floor(Math.random() * tamilQuotes.length)]);
   }, []);
+
+  const handleSaveChanges = () => {
+    toast({
+      title: 'Success!',
+      description: 'Your changes have been saved. "Katham Katham... Mudinjadhu Mudinju Potum!"',
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -96,7 +105,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="flex justify-end">
-            <Button>Save Changes</Button>
+            <Button onClick={handleSaveChanges}>Save Changes</Button>
           </div>
         </CardContent>
       </Card>
