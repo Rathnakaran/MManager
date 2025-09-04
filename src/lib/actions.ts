@@ -59,7 +59,7 @@ export async function getUsers(): Promise<User[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
 }
 
-export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email'>>) {
+export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth'>>) {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, userData);
     revalidatePath('/settings');

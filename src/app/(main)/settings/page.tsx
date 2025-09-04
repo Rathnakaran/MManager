@@ -68,6 +68,7 @@ type CreateUserFormValues = z.infer<typeof createUserFormSchema>;
 const editUserFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
+  dateOfBirth: z.date({ required_error: 'Date of birth is required.' }),
 });
 type EditUserFormValues = z.infer<typeof editUserFormSchema>;
 
@@ -179,7 +180,12 @@ export default function SettingsPage() {
     if (!selectedUser) return;
     startTransition(async () => {
       try {
-        await updateUser(selectedUser.id, values);
+        const userData = {
+            name: values.name,
+            email: values.email,
+            dateOfBirth: values.dateOfBirth.toISOString().split('T')[0],
+        }
+        await updateUser(selectedUser.id, userData);
         await fetchUsers();
         toast({
           title: 'Success!',
@@ -198,7 +204,7 @@ export default function SettingsPage() {
   
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
-    editUserForm.reset({ name: user.name, email: user.email });
+    editUserForm.reset({ name: user.name, email: user.email, dateOfBirth: new Date(user.dateOfBirth) });
     setIsEditUserOpen(true);
   }
 
@@ -317,13 +323,14 @@ export default function SettingsPage() {
           <DialogHeader>
             <DialogTitle>Edit User: @{selectedUser?.username}</DialogTitle>
             <DialogDescription>
-              Update the user's name and email address.
+              Update the user's details. Username cannot be changed.
             </DialogDescription>
           </DialogHeader>
           <Form {...editUserForm}>
             <form onSubmit={editUserForm.handleSubmit(onEditUserSubmit)} className="space-y-4">
               <FormField control={editUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={editUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={editUserForm.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col pt-2"><FormLabel>Date of Birth</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={'outline'} className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="buttons" disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
               <DialogFooter>
                 <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
                 <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Changes'}</Button>
