@@ -38,7 +38,7 @@ const formSchema = z.object({
   category: z.string().min(1, { message: 'Please select a category.' }),
   frequency: z.enum(['monthly', 'yearly']),
   startDate: z.date(),
-});
+})
 
 type FormValues = z.infer<typeof formSchema>;
 
