@@ -20,6 +20,13 @@ import {
   ShoppingBag,
   Landmark,
   CircleDollarSign,
+  CreditCard,
+  Heart,
+  Users,
+  Briefcase,
+  Gift,
+  Plane,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -37,8 +44,14 @@ export type IconName =
   | 'HeartPulse'
   | 'ShoppingBag'
   | 'Landmark'
-  | 'CircleDollarSign';
-
+  | 'CircleDollarSign'
+  | 'CreditCard'
+  | 'Heart'
+  | 'Users'
+  | 'Briefcase'
+  | 'Gift'
+  | 'Plane'
+  | 'Receipt';
 
 export const Icons = {
   dashboard: LayoutDashboard,
@@ -61,27 +74,41 @@ export const Icons = {
   HeartPulse,
   ShoppingBag,
   Landmark,
-  CircleDollarSign
+  CircleDollarSign,
+  CreditCard,
+  Heart,
+  Users,
+  Briefcase,
+  Gift,
+  Plane,
+  Receipt,
 };
 
 const iconMap: Record<string, LucideIcon> = {
-    LayoutDashboard,
-    ArrowRightLeft,
-    PiggyBank,
-    Target,
-    Repeat,
-    ShoppingCart,
-    Utensils,
-    Car,
-    Home,
-    Ticket,
-    HeartPulse,
-    ShoppingBag,
-    Landmark,
-    CircleDollarSign
+  LayoutDashboard,
+  ArrowRightLeft,
+  PiggyBank,
+  Target,
+  Repeat,
+  ShoppingCart,
+  Utensils,
+  Car,
+  Home,
+  Ticket,
+  HeartPulse,
+  ShoppingBag,
+  Landmark,
+  CircleDollarSign,
+  CreditCard,
+  Heart,
+  Users,
+  Briefcase,
+  Gift,
+  Plane,
+  Receipt,
 };
 
 export const getIconByName = (name: string): LucideIcon => {
-    const Icon = iconMap[name];
-    return Icon || CircleDollarSign;
+  const Icon = iconMap[name];
+  return Icon || CircleDollarSign;
 };

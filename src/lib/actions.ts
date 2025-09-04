@@ -91,6 +91,26 @@ export async function addBudget(budgetData: Omit<Budget, 'id'>) {
     return { success: true, budget: newBudget };
   }
 
+export async function updateBudget(id: string, budgetData: Partial<Budget>) {
+    await delay(500);
+    const index = budgets.findIndex(b => b.id === id);
+    if (index !== -1) {
+        budgets[index] = { ...budgets[index], ...budgetData };
+        revalidatePath('/budgets');
+        revalidatePath('/dashboard');
+        return { success: true, budget: budgets[index] };
+    }
+    return { success: false, message: 'Budget not found' };
+}
+
+export async function deleteBudget(id: string) {
+    await delay(500);
+    budgets = budgets.filter(b => b.id !== id);
+    revalidatePath('/budgets');
+    revalidatePath('/dashboard');
+    return { success: true };
+}
+
 // --- Placeholder actions for other features ---
 
 export async function getGoals() {
