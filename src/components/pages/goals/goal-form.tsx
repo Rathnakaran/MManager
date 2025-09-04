@@ -112,7 +112,7 @@ export default function GoalForm({ goal, onFinished, onFormSubmit }: GoalFormPro
           name="targetDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Target Date</_FormLabel>
+              <FormLabel>Target Date</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
