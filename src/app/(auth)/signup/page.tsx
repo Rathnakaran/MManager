@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUser } from '@/lib/actions';
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -46,6 +46,7 @@ export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -133,7 +134,7 @@ export default function SignupPage() {
                 render={({ field }) => (
                     <FormItem className="flex flex-col">
                     <FormLabel>Date of Birth</FormLabel>
-                    <Popover>
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <PopoverTrigger asChild>
                         <FormControl>
                             <Button
@@ -152,7 +153,10 @@ export default function SignupPage() {
                         <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                                field.onChange(date);
+                                setIsCalendarOpen(false);
+                            }}
                             disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                             initialFocus
                         />
