@@ -72,7 +72,7 @@ async function seedDatabase() {
 
 // --- Data Fetching ---
 export async function getData() {
-  await seedDatabase();
+  // await seedDatabase(); // Removed automatic seeding
   const [transactions, budgets, goals] = await Promise.all([
     getTransactions(),
     getBudgets(),
