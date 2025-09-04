@@ -138,6 +138,11 @@ export async function getGoals() {
   return goals;
 }
 
+export async function getGoalCategories() {
+    await delay(100);
+    return goals.map(g => getGoalKeyword(g.name));
+}
+
 export async function addGoal(goalData: Omit<Goal, 'id'>) {
   await delay(500);
   const newGoal: Goal = {
