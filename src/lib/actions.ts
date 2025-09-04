@@ -6,15 +6,13 @@ import {
   sampleTransactions,
   sampleBudgets,
   sampleGoals,
-  sampleRecurring,
 } from './seed-data';
-import type { Transaction, Budget, Goal, Recurring } from '@/types';
+import type { Transaction, Budget, Goal } from '@/types';
 
 // Simulate a database
 let transactions: Transaction[] = sampleTransactions.map((t, i) => ({ ...t, id: `trans-${i}` }));
 let budgets: Budget[] = sampleBudgets.map((b, i) => ({ ...b, id: `budget-${i}` }));
 let goals: Goal[] = sampleGoals.map((g, i) => ({ ...g, id: `goal-${i}` }));
-let recurring: Recurring[] = sampleRecurring.map((r, i) => ({ ...r, id: `recur-${i}` }));
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -30,7 +28,6 @@ export async function getData() {
     transactions,
     budgets,
     goals,
-    recurring,
   };
 }
 
@@ -70,7 +67,6 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
 
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
-  revalidatePath('/recurring');
   return { success: true, transaction: newTransaction };
 }
 
@@ -81,7 +77,6 @@ export async function updateTransaction(id: string, transactionData: Partial<Tra
     transactions[index] = { ...transactions[index], ...transactionData };
     revalidatePath('/transactions');
     revalidatePath('/dashboard');
-    revalidatePath('/recurring');
     revalidatePath('/goals');
     return { success: true, transaction: transactions[index] };
   }
@@ -93,7 +88,6 @@ export async function deleteTransaction(id: string) {
   transactions = transactions.filter(t => t.id !== id);
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
-  revalidatePath('/recurring');
   revalidatePath('/goals');
   return { success: true };
 }
@@ -174,46 +168,6 @@ export async function deleteGoal(id: string) {
   revalidatePath('/dashboard');
   return { success: true };
 }
-
-
-// --- Recurring Actions ---
-export async function getRecurring() {
-  await delay(200);
-  return recurring;
-}
-
-export async function addRecurring(recurringData: Omit<Recurring, 'id'>) {
-    await delay(500);
-    const newRecurring: Recurring = {
-        ...recurringData,
-        id: `recur-${Date.now()}`,
-    };
-    recurring.push(newRecurring);
-    revalidatePath('/recurring');
-    revalidatePath('/dashboard');
-    return { success: true, recurring: newRecurring };
-}
-
-export async function updateRecurring(id: string, recurringData: Partial<Recurring>) {
-    await delay(500);
-    const index = recurring.findIndex(r => r.id === id);
-    if (index !== -1) {
-        recurring[index] = { ...recurring[index], ...recurringData };
-        revalidatePath('/recurring');
-        revalidatePath('/dashboard');
-        return { success: true, recurring: recurring[index] };
-    }
-    return { success: false, message: 'Recurring transaction not found' };
-}
-
-export async function deleteRecurring(id: string) {
-    await delay(500);
-    recurring = recurring.filter(r => r.id !== id);
-    revalidatePath('/recurring');
-    revalidatePath('/dashboard');
-    return { success: true };
-}
-
 
 export async function importTransactions(data: any[]) {
     await delay(1000);

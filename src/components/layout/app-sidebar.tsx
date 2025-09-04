@@ -17,7 +17,6 @@ const menuItems = [
   { href: '/transactions', label: 'Transactions', icon: Icons.transactions },
   { href: '/budgets', label: 'Budgets', icon: Icons.budgets },
   { href: '/goals', label: 'Goals', icon: Icons.goals },
-  { href: '/recurring', label: 'Recurring', icon: Icons.recurring },
 ];
 
 export default function AppSidebar() {
