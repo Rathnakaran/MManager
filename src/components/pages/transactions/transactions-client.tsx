@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import type { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -32,6 +32,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [title, setTitle] = useState(transactionTitles[0]);
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
   
   useEffect(() => {
     setTitle(transactionTitles[Math.floor(Math.random() * transactionTitles.length)]);
@@ -72,36 +73,34 @@ export default function TransactionsClient({ initialTransactions, categories }: 
     }
   };
 
-  const onFormSubmit = async (values: Omit<Transaction, 'id' | 'date'> & {date: Date}, id?: string) => {
-    const transactionData = {
-        ...values,
-        date: values.date.toISOString().split('T')[0],
-    };
-
-    if (id) { // Update
-        const originalTransactions = transactions;
-        setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...transactionData} : t));
-        try {
-            await updateTransaction(id, transactionData);
-            toast({ title: 'Success', description: 'Transaction updated successfully.' });
-        } catch (error) {
-            setTransactions(originalTransactions);
-            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+  const onFormSubmit = (transactionData: Omit<Transaction, 'id'>, id?: string) => {
+    startTransition(async () => {
+        if (id) { // Update
+            const originalTransactions = transactions;
+            const updatedTransaction = { ...transactionData, id };
+            setTransactions(prev => prev.map(t => t.id === id ? updatedTransaction : t));
+            try {
+                await updateTransaction(id, transactionData);
+                toast({ title: 'Success', description: 'Transaction updated successfully.' });
+            } catch (error) {
+                setTransactions(originalTransactions);
+                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+            }
+        } else { // Add
+            const tempId = `temp-${Date.now()}`;
+            const newTransaction: Transaction = { ...transactionData, id: tempId };
+            setTransactions(prev => [newTransaction, ...prev]);
+            try {
+                const { transaction: savedTransaction } = await addTransaction(transactionData);
+                setTransactions(prev => prev.map(t => t.id === tempId ? savedTransaction : t));
+                toast({ title: 'Success', description: 'Transaction added successfully.' });
+            } catch (error) {
+                setTransactions(prev => prev.filter(t => t.id !== tempId));
+                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+            }
         }
-    } else { // Add
-        const tempId = `temp-${Date.now()}`;
-        const newTransaction: Transaction = { ...transactionData, id: tempId };
-        setTransactions(prev => [newTransaction, ...prev]);
-        try {
-            const { transaction: savedTransaction } = await addTransaction(transactionData);
-            setTransactions(prev => prev.map(t => t.id === tempId ? savedTransaction : t));
-            toast({ title: 'Success', description: 'Transaction added successfully.' });
-        } catch (error) {
-            setTransactions(prev => prev.filter(t => t.id !== tempId));
-            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-        }
-    }
-    handleSheetClose();
+        handleSheetClose();
+    });
   }
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {

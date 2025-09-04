@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useTransition } from 'react';
 import type { Budget, Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { addBudget, deleteBudget, updateBudget } from '@/lib/actions';
+import { addBudget, deleteBudget, updateBudget, getTransactions } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getIconByName } from '@/components/icons';
 import {
@@ -46,6 +46,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [title, setTitle] = useState(budgetTitles[0]);
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setTitle(budgetTitles[Math.floor(Math.random() * budgetTitles.length)]);
@@ -68,15 +69,16 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this budget category?')) return;
+    const originalBudgets = budgets;
+    setBudgets(prev => prev.filter(b => b.id !== id));
     try {
-      setBudgets(prev => prev.filter(b => b.id !== id));
       await deleteBudget(id);
       toast({
         title: 'Success',
         description: 'Budget category deleted successfully.',
       });
     } catch (error) {
-      setBudgets(initialBudgets); // Revert on error
+      setBudgets(originalBudgets); 
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -85,31 +87,34 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
     }
   };
 
-  const onFormSubmit = async (values: Omit<Budget, 'id'>, id?: string) => {
-     if (id) { // Update
-        const originalBudgets = budgets;
-        setBudgets(prev => prev.map(b => b.id === id ? { ...b, ...values} : b));
-        try {
-            await updateBudget(id, values);
-            toast({ title: 'Success', description: 'Budget updated successfully.' });
-        } catch (error) {
-            setBudgets(originalBudgets);
-            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+  const onFormSubmit = (values: Omit<Budget, 'id'>, id?: string) => {
+    startTransition(async () => {
+        if (id) { // Update
+            const originalBudgets = budgets;
+            const updatedBudget: Budget = { ...values, id };
+            setBudgets(prev => prev.map(b => b.id === id ? updatedBudget : b));
+            try {
+                await updateBudget(id, values);
+                toast({ title: 'Success', description: 'Budget updated successfully.' });
+            } catch (error) {
+                setBudgets(originalBudgets);
+                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+            }
+        } else { // Add
+            const tempId = `temp-${Date.now()}`;
+            const newBudget: Budget = { ...values, id: tempId };
+            setBudgets(prev => [...prev, newBudget]);
+            try {
+                const { budget: savedBudget } = await addBudget(values);
+                setBudgets(prev => prev.map(b => b.id === tempId ? savedBudget : b));
+                toast({ title: 'Success', description: 'Budget added successfully.' });
+            } catch (error) {
+                setBudgets(prev => prev.filter(b => b.id !== tempId));
+                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+            }
         }
-    } else { // Add
-        const tempId = `temp-${Date.now()}`;
-        const newBudget: Budget = { ...values, id: tempId };
-        setBudgets(prev => [...prev, newBudget]);
-        try {
-            const { budget: savedBudget } = await addBudget(values);
-            setBudgets(prev => prev.map(b => b.id === tempId ? savedBudget : b));
-            toast({ title: 'Success', description: 'Budget added successfully.' });
-        } catch (error) {
-            setBudgets(prev => prev.filter(b => b.id !== tempId));
-            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-        }
-    }
-    handleSheetClose();
+        handleSheetClose();
+    });
   };
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
@@ -207,7 +212,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
                                 <TableCell className="text-right">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
                                             <span className="sr-only">Open menu</span>
                                             <MoreHorizontal className="h-4 w-4" />
                                             </Button>

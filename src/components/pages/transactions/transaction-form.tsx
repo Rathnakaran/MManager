@@ -47,7 +47,7 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
   categories: { budgetCategories: string[], goalCategories: string[] };
   onFinished: () => void;
-  onFormSubmit: (values: FormValues, id?: string) => Promise<void>;
+  onFormSubmit: (values: Omit<Transaction, 'id'>, id?: string) => void;
 }
 
 export default function TransactionForm({ transaction, categories, onFinished, onFormSubmit }: TransactionFormProps) {
@@ -67,8 +67,12 @@ export default function TransactionForm({ transaction, categories, onFinished, o
   });
 
   const onSubmit = (values: FormValues) => {
-    startTransition(async () => {
-        await onFormSubmit(values, transaction?.id);
+    startTransition(() => {
+        const transactionData = {
+          ...values,
+          date: values.date.toISOString().split('T')[0],
+        };
+        onFormSubmit(transactionData, transaction?.id);
         form.reset({
             description: '',
             amount: 0,
@@ -89,7 +93,8 @@ export default function TransactionForm({ transaction, categories, onFinished, o
     startTransition(async () => {
         setIsSuggesting(true);
         try {
-            const result = await suggestCategory({ description, categories: categories.budgetCategories });
+            const allCategories = [...categories.budgetCategories, ...categories.goalCategories, "Other"];
+            const result = await suggestCategory({ description, categories: allCategories });
             if (result.suggestedCategory) {
                 form.setValue('category', result.suggestedCategory, { shouldValidate: true });
                 toast({ title: 'Suggestion applied!', description: `Category set to "${result.suggestedCategory}".`});
@@ -208,18 +213,22 @@ export default function TransactionForm({ transaction, categories, onFinished, o
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectGroup>
-                                    <SelectLabel>Goal Contributions</SelectLabel>
-                                    {categories.goalCategories.map(cat => (
-                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                    ))}
-                                </SelectGroup>
-                                <SelectGroup>
-                                    <SelectLabel>Budget Categories</SelectLabel>
-                                    {categories.budgetCategories.map(cat => (
-                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                    ))}
-                                </SelectGroup>
+                                {categories.goalCategories.length > 0 && (
+                                    <SelectGroup>
+                                        <SelectLabel>Goal Contributions</SelectLabel>
+                                        {categories.goalCategories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                )}
+                                {categories.budgetCategories.length > 0 && (
+                                    <SelectGroup>
+                                        <SelectLabel>Budget Categories</SelectLabel>
+                                        {categories.budgetCategories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                )}
                                 <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                         </Select>

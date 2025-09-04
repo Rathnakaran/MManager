@@ -24,7 +24,7 @@ import { Lightbulb } from 'lucide-react';
 const formSchema = z.object({
   category: z.string().min(2, { message: 'Category name must be at least 2 characters.' }),
   amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
-  icon: z.string().min(1, { message: 'Icon is required.' }),
+  icon: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -32,7 +32,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface BudgetFormProps {
   budget?: Budget | null;
   onFinished: () => void;
-  onFormSubmit: (values: FormValues, id?: string) => Promise<void>;
+  onFormSubmit: (values: Omit<Budget, 'id'>, id?: string) => void;
 }
 
 export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetFormProps) {
@@ -50,8 +50,12 @@ export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetF
   });
 
   const onSubmit = (values: FormValues) => {
-    startTransition(async () => {
-      await onFormSubmit(values, budget?.id);
+    startTransition(() => {
+      const finalValues = {
+        ...values,
+        icon: values.icon || 'CircleDollarSign' // Provide a default icon if none is entered
+      };
+      onFormSubmit(finalValues, budget?.id);
       form.reset();
     });
   };
@@ -119,7 +123,7 @@ export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetF
                 <FormItem>
                     <FormLabel>Icon Name (from Lucide React)</FormLabel>
                     <div className="flex gap-2">
-                        <Input placeholder="e.g., ShoppingCart" {...field} />
+                        <Input placeholder="e.g., ShoppingCart (optional)" {...field} />
                         <Button type="button" variant="outline" size="icon" onClick={handleSuggestIcon} disabled={isSuggesting || isPending}>
                             <Lightbulb className={cn("h-4 w-4", isSuggesting && "animate-pulse")} />
                         </Button>
