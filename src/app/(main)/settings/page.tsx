@@ -296,7 +296,7 @@ export default function SettingsPage() {
                            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold">{user.name} {user.id === currentUser.id && <Badge variant="secondary">You</Badge>}</p>
+                            <div className="font-semibold flex items-center gap-2">{user.name} {user.id === currentUser.id && <Badge variant="secondary">You</Badge>}</div>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                             <p className="text-xs text-muted-foreground">@{user.username}</p>
                         </div>
