@@ -23,7 +23,7 @@ const getGoalKeyword = (goalName: string) => {
 }
 
 // --- User Actions ---
-export async function createUser(userData: Omit<User, 'id' | 'name'> & { name?: string }) {
+export async function createUser(userData: Omit<User, 'id'>) {
     const usersCollection = collection(db, 'users');
     // Check if username already exists
     const q = query(usersCollection, where('username', '==', userData.username));
@@ -32,13 +32,9 @@ export async function createUser(userData: Omit<User, 'id' | 'name'> & { name?: 
         throw new Error('Username already exists');
     }
     
-    const finalUserData = {
-        name: userData.name || userData.username, // Default name to username if not provided
-        ...userData
-    };
-
-    const newDocRef = await addDoc(usersCollection, finalUserData);
-    return { id: newDocRef.id, ...finalUserData };
+    const newDocRef = await addDoc(usersCollection, userData);
+    revalidatePath('/settings');
+    return { id: newDocRef.id, ...userData };
 }
 
 export async function getUserByUsername(username: string, password?: string): Promise<User | null> {
@@ -272,27 +268,4 @@ export async function deleteRecurringTransaction(id: string) {
     await deleteDoc(recRef);
     revalidatePath('/recurring');
     return { success: true };
-}
-
-// --- Seeding ---
-export async function seedInitialData() {
-    const usersCollection = collection(db, 'users');
-    const q = query(usersCollection, where('username', '==', 'Rathnakaran'));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-        console.log('Admin user not found, creating...');
-        await addDoc(usersCollection, {
-            username: 'Rathnakaran',
-            password: 'Rathna@123',
-            email: 'Rathnakaran480@gmail.com',
-            dateOfBirth: '2000-08-26',
-            name: 'MahaRathna',
-        });
-        console.log('Admin user created.');
-        return 'Admin user created successfully.';
-    } else {
-        console.log('Admin user already exists.');
-        return 'Admin user already exists.';
-    }
 }

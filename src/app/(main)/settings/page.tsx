@@ -139,6 +139,7 @@ export default function SettingsPage() {
           description: `User "${values.username}" has been created.`,
         });
         userForm.reset();
+        document.getElementById('close-create-user-dialog')?.click();
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -249,105 +250,117 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <Form {...userForm}>
-                <form onSubmit={userForm.handleSubmit(onCreateUserSubmit)} className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <FormField
-                            control={userForm.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Full Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., Superstar" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        <FormField
-                            control={userForm.control}
-                            name="username"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="new_user" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        <FormField
-                            control={userForm.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                    <Input type="email" placeholder="user@example.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        <FormField
-                            control={userForm.control}
-                            name="password"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                    <Input type="password" placeholder="********" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        <FormField
-                            control={userForm.control}
-                            name="dateOfBirth"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col mt-2">
-                                <FormLabel>Date of Birth</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button><UserPlus className="mr-2 h-4 w-4" /> Create New User</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Create a New User</DialogTitle>
+                        <DialogDescription>
+                            Fill in the details below to create a new user account.
+                        </DialogDescription>
+                    </DialogHeader>
+                     <Form {...userForm}>
+                        <form onSubmit={userForm.handleSubmit(onCreateUserSubmit)} className="space-y-4">
+                            <FormField
+                                control={userForm.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Full Name</FormLabel>
                                     <FormControl>
-                                        <Button
-                                        variant={'outline'}
-                                        className={cn(
-                                            'w-full pl-3 text-left font-normal',
-                                            !field.value && 'text-muted-foreground'
-                                        )}
-                                        >
-                                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
+                                        <Input placeholder="e.g., Superstar" {...field} />
                                     </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        captionLayout="buttons"
-                                        disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                                        initialFocus
-                                    />
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                    </div>
-                     <div className="flex justify-end pt-2">
-                        <Button type="submit" disabled={isPending}>
-                            {isPending ? 'Creating User...' : 'Create New User'}
-                        </Button>
-                    </div>
-                </form>
-            </Form>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                            <FormField
+                                control={userForm.control}
+                                name="username"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Username</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="new_user" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                            <FormField
+                                control={userForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                        <Input type="email" placeholder="user@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                            <FormField
+                                control={userForm.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" placeholder="********" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                            <FormField
+                                control={userForm.control}
+                                name="dateOfBirth"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col pt-2">
+                                    <FormLabel>Date of Birth</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button
+                                            variant={'outline'}
+                                            className={cn(
+                                                'w-full pl-3 text-left font-normal',
+                                                !field.value && 'text-muted-foreground'
+                                            )}
+                                            >
+                                            {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            captionLayout="buttons"
+                                            disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                                            initialFocus
+                                        />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                            <DialogFooter className='pt-4'>
+                                <DialogClose asChild><Button id="close-create-user-dialog" type="button" variant="ghost">Cancel</Button></DialogClose>
+                                <Button type="submit" disabled={isPending}>
+                                    {isPending ? 'Creating...' : 'Create User'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </DialogContent>
+            </Dialog>
         </CardContent>
       </Card>
     </div>
