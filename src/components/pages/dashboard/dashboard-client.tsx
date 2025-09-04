@@ -5,7 +5,6 @@ import { StatCards } from './stat-cards';
 import { ExpenseChart } from './charts';
 import { BudgetStatus } from './budget-status';
 import { AiAdvisor } from './ai-advisor';
-import { GoalProgress } from './goal-progress';
 
 interface DashboardClientProps {
   transactions: Transaction[];
@@ -35,15 +34,21 @@ export default function DashboardClient({
     }, {} as Record<string, number>);
 
   return (
-    <div className="grid gap-8">
+    <div className="space-y-8">
+      <h1 className="text-4xl font-bold font-headline">Welcome Back, Boss!</h1>
+
       <StatCards
         totalSpent={totalSpent}
         remainingBudget={remainingBudget}
         totalBudget={totalBudget}
       />
-      <div>
-        <GoalProgress goals={goals} />
-      </div>
+      
+      <AiAdvisor
+        totalSpent={totalSpent}
+        remainingBudget={remainingBudget}
+        expenseBreakdown={expenseBreakdown}
+      />
+      
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <ExpenseChart data={expenseBreakdown} />
@@ -51,13 +56,6 @@ export default function DashboardClient({
         <div className="lg:col-span-2">
           <BudgetStatus transactions={transactions} budgets={budgets} />
         </div>
-      </div>
-      <div>
-        <AiAdvisor
-          totalSpent={totalSpent}
-          remainingBudget={remainingBudget}
-          expenseBreakdown={expenseBreakdown}
-        />
       </div>
     </div>
   );

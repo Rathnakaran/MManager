@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CircleDollarSign, PiggyBank, Landmark } from 'lucide-react';
+import { CircleDollarSign, PiggyBank, BarChart } from 'lucide-react';
 import { useMemo } from 'react';
 
 interface StatCardsProps {
@@ -21,40 +21,37 @@ export function StatCards({ totalSpent, remainingBudget, totalBudget }: StatCard
     }, [totalSpent, totalBudget]);
 
     return (
-        <>
-            <h1 className="text-3xl font-bold font-headline mb-4">Dashboard</h1>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Spent (This Month)</CardTitle>
-                        <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(totalSpent)}</div>
-                        <p className="text-xs text-muted-foreground">"Rules are meant to be broken."</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Remaining Budget</CardTitle>
-                        <PiggyBank className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className={`text-2xl font-bold ${remainingBudget < 0 ? 'text-destructive' : 'text-primary'}`}>{formatCurrency(remainingBudget)}</div>
-                        <p className="text-xs text-muted-foreground">of {formatCurrency(totalBudget)} total budget</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Budget Progress</CardTitle>
-                        <Landmark className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                         <div className="text-2xl font-bold mb-2">{budgetProgress.toFixed(0)}%</div>
-                         <Progress value={budgetProgress} aria-label={`${budgetProgress.toFixed(0)}% of budget spent`} />
-                    </CardContent>
-                </Card>
-            </div>
-        </>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Kaasu Selavu</CardTitle>
+                    <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-3xl font-bold">{formatCurrency(totalSpent)}</div>
+                    <p className="text-xs text-muted-foreground">for October 2023</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Meedhi Kaasu</CardTitle>
+                    <PiggyBank className="h-5 w-5 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className={`text-3xl font-bold`}>{formatCurrency(remainingBudget)}</div>
+                    <p className="text-xs text-muted-foreground">of {formatCurrency(totalBudget)} total budget</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Progress Report</CardTitle>
+                    <BarChart className="h-5 w-5 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                     <p className="text-sm text-muted-foreground mb-2">You've spent <span className="font-bold text-foreground">{budgetProgress.toFixed(0)}%</span> of your budget this month.</p>
+                     <Progress value={budgetProgress} aria-label={`${budgetProgress.toFixed(0)}% of budget spent`} className="h-2" />
+                </CardContent>
+            </Card>
+        </div>
     );
 }

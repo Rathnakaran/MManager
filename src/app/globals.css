@@ -4,25 +4,25 @@
 
 @layer base {
   .dark {
-    --background: 240 10% 7%;
+    --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 10%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 7%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 231 48% 48%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 48 96% 59%;
+    --primary-foreground: 240 10% 3.9%;
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 16%;
     --muted-foreground: 0 0% 63%;
-    --accent: 289 84% 54%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 48 96% 59%;
+    --accent-foreground: 240 10% 3.9%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 289 84% 54%;
+    --ring: 48 96% 59%;
     --radius: 0.5rem;
     --chart-1: 231 48% 48%;
     --chart-2: 289 84% 54%;

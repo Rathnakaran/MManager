@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import {
   Card,
   CardContent,
@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/card';
 import { getFinancialAdvice, type FinancialAdviceOutput } from '@/ai/flows/ai-financial-advisor';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, RotateCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface AiAdvisorProps {
   totalSpent: number;
@@ -21,9 +22,10 @@ interface AiAdvisorProps {
 export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiAdvisorProps) {
   const [advice, setAdvice] = useState<FinancialAdviceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    async function fetchAdvice() {
+  const fetchAdvice = () => {
+    startTransition(async () => {
       try {
         setIsLoading(true);
         const result = await getFinancialAdvice({
@@ -38,30 +40,35 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
       } finally {
         setIsLoading(false);
       }
-    }
+    });
+  }
+
+  useEffect(() => {
     fetchAdvice();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalSpent, remainingBudget, expenseBreakdown]);
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-primary" />
-          AI Financial Advisor
-        </CardTitle>
-        <CardDescription>
-          Personalized insights to help you manage your finances better.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div className="flex items-center gap-2">
+            <Lightbulb className="h-5 w-5 text-primary" />
+            <CardTitle>AI Financial Advisor</CardTitle>
+        </div>
+        <Button variant="ghost" size="sm" onClick={fetchAdvice} disabled={isPending || isLoading}>
+            <RotateCw className={`mr-2 h-4 w-4 ${isPending || isLoading ? 'animate-spin' : ''}`} />
+            Retry
+        </Button>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
           </div>
         ) : advice ? (
           <div>
-            <p className="mb-4 text-sm">{advice.summary}</p>
+            <p className="text-muted-foreground">{advice.summary}</p>
           </div>
         ) : null}
       </CardContent>
