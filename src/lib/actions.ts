@@ -51,8 +51,8 @@ export async function getBudgetCategories(): Promise<string[]> {
 }
 
 // --- Transaction Actions ---
-export async function addTransaction(transactionData: Omit<Transaction, 'id'>): Promise<Transaction> {
-  const newTransactionRef = await addDoc(collection(db, 'transactions'), transactionData);
+export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
+  await addDoc(collection(db, 'transactions'), transactionData);
   
   // Check if the transaction category is a goal contribution
   const goals = await getGoals();
@@ -63,15 +63,11 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>): 
       await updateDoc(goalRef, {
           currentAmount: goal.currentAmount + transactionData.amount
       });
-      revalidatePath('/goals');
-      revalidatePath('/dashboard');
   }
 
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
-  
-  const newDoc = await getDoc(newTransactionRef);
-  return { id: newDoc.id, ...newDoc.data() } as Transaction;
+  revalidatePath('/goals');
 }
 
 export async function updateTransaction(id: string, transactionData: Partial<Transaction>) {
@@ -80,8 +76,6 @@ export async function updateTransaction(id: string, transactionData: Partial<Tra
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
   revalidatePath('/goals');
-  const updatedDoc = await getDoc(transactionRef);
-  return { id: updatedDoc.id, ...updatedDoc.data() } as Transaction;
 }
 
 export async function deleteTransaction(id: string) {
@@ -90,17 +84,14 @@ export async function deleteTransaction(id: string) {
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
   revalidatePath('/goals');
-  return { success: true };
 }
 
 
 // --- Budget Actions ---
-export async function addBudget(budgetData: Omit<Budget, 'id'>): Promise<Budget> {
-    const newBudgetRef = await addDoc(collection(db, 'budgets'), budgetData);
+export async function addBudget(budgetData: Omit<Budget, 'id'>) {
+    await addDoc(collection(db, 'budgets'), budgetData);
     revalidatePath('/budgets');
     revalidatePath('/dashboard');
-    const newDoc = await getDoc(newBudgetRef);
-    return { id: newDoc.id, ...newDoc.data() } as Budget;
 }
 
 export async function updateBudget(id: string, budgetData: Partial<Budget>) {
@@ -108,8 +99,6 @@ export async function updateBudget(id: string, budgetData: Partial<Budget>) {
     await updateDoc(budgetRef, budgetData);
     revalidatePath('/budgets');
     revalidatePath('/dashboard');
-    const updatedDoc = await getDoc(budgetRef);
-    return { id: updatedDoc.id, ...updatedDoc.data() } as Budget;
 }
 
 export async function deleteBudget(id: string) {
@@ -117,7 +106,6 @@ export async function deleteBudget(id: string) {
     await deleteDoc(budgetRef);
     revalidatePath('/budgets');
     revalidatePath('/dashboard');
-    return { success: true };
 }
 
 // --- Goal Actions ---
@@ -162,7 +150,6 @@ export async function importTransactions(data: any[]) {
     const batch = writeBatch(db);
     const transactionsCollection = collection(db, 'transactions');
     let count = 0;
-    const newTransactions: Transaction[] = [];
 
     const goals = await getGoals();
 
@@ -170,9 +157,9 @@ export async function importTransactions(data: any[]) {
         if (!row.Date || !row.Description || !row.Amount || !row.Category) continue;
 
         const amount = parseFloat(row.Amount);
-        const type = amount >= 0 ? 'income' : 'expense';
+        const type = parseFloat(row.Amount) >= 0 ? 'income' : 'expense';
 
-        const transactionData = {
+        const transactionData: Omit<Transaction, 'id'> = {
             date: new Date(row.Date).toISOString(),
             description: row.Description,
             amount: Math.abs(amount),
@@ -182,7 +169,6 @@ export async function importTransactions(data: any[]) {
         
         const docRef = doc(transactionsCollection);
         batch.set(docRef, transactionData);
-        newTransactions.push({ id: docRef.id, ...transactionData });
         
         if (transactionData.type === 'expense') {
             const goal = goals.find(g => getGoalKeyword(g.name) === transactionData.category);
@@ -204,8 +190,6 @@ export async function importTransactions(data: any[]) {
       revalidatePath('/dashboard');
       revalidatePath('/goals');
     }
-
-    return { success: true, count, newTransactions };
 }
 
 

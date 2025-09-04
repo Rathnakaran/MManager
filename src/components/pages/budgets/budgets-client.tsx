@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { addBudget, deleteBudget, updateBudget, getTransactions } from '@/lib/actions';
+import { addBudget, deleteBudget, updateBudget, getBudgets, getTransactions } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getIconByName } from '@/components/icons';
 import {
@@ -69,36 +69,42 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this budget category?')) return;
-    const originalBudgets = budgets;
-    setBudgets(prev => prev.filter(b => b.id !== id));
-    try {
-      await deleteBudget(id);
-      toast({
-        title: 'Success',
-        description: 'Budget category deleted successfully.',
-      });
-    } catch (error) {
-      setBudgets(originalBudgets); 
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete budget category.',
-      });
-    }
+    
+    startTransition(async () => {
+      try {
+        await deleteBudget(id);
+        const [updatedBudgets, updatedTransactions] = await Promise.all([getBudgets(), getTransactions()]);
+        setBudgets(updatedBudgets);
+        setTransactions(updatedTransactions);
+        toast({
+          title: 'Success',
+          description: 'Budget category deleted successfully.',
+        });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to delete budget category.',
+        });
+      }
+    });
   };
 
   const onFormSubmit = (values: Omit<Budget, 'id'>, id?: string) => {
     startTransition(async () => {
       try {
         if (id) {
-          const updatedBudget = await updateBudget(id, values);
-          setBudgets(prev => prev.map(b => (b.id === id ? updatedBudget : b)));
+          await updateBudget(id, values);
           toast({ title: 'Success', description: 'Budget updated successfully.' });
         } else {
-          const newBudget = await addBudget(values);
-          setBudgets(prev => [newBudget, ...prev]);
+          await addBudget(values);
           toast({ title: 'Success', description: 'Budget added successfully.' });
         }
+        
+        const [updatedBudgets, updatedTransactions] = await Promise.all([getBudgets(), getTransactions()]);
+        setBudgets(updatedBudgets);
+        setTransactions(updatedTransactions);
+        
         handleSheetClose();
       } catch (error) {
         toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
@@ -207,12 +213,13 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleEdit(budget)}>
+                                            <DropdownMenuItem onClick={() => handleEdit(budget)} disabled={isPending}>
                                                 Edit
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                             className="text-destructive"
                                             onClick={() => handleDelete(budget.id)}
+                                            disabled={isPending}
                                             >
                                                 Delete
                                             </DropdownMenuItem>

@@ -10,7 +10,7 @@ import { columns } from './columns';
 import TransactionForm from './transaction-form';
 import { FileDown, FileUp, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { importTransactions, addTransaction, updateTransaction, deleteTransaction } from '@/lib/actions';
+import { importTransactions, addTransaction, updateTransaction, deleteTransaction, getTransactions } from '@/lib/actions';
 import Papa from 'papaparse';
 
 
@@ -56,37 +56,42 @@ export default function TransactionsClient({ initialTransactions, categories }: 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this transaction?')) return;
     
-    setTransactions(prev => prev.filter(t => t.id !== id));
-    try {
-      await deleteTransaction(id);
-      toast({
-        title: 'Success',
-        description: 'Transaction deleted successfully.',
-      });
-    } catch (error) {
-      setTransactions(initialTransactions);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete transaction.',
-      });
-    }
+    startTransition(async () => {
+        try {
+            await deleteTransaction(id);
+            const updatedTransactions = await getTransactions();
+            setTransactions(updatedTransactions);
+            toast({
+                title: 'Success',
+                description: 'Transaction deleted successfully.',
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to delete transaction.',
+            });
+        }
+    });
   };
 
   const onFormSubmit = (transactionData: Omit<Transaction, 'id'>, id?: string) => {
     startTransition(async () => {
       try {
         if (id) {
-          const updatedTransaction = await updateTransaction(id, transactionData);
-          setTransactions(prev => prev.map(t => (t.id === id ? updatedTransaction : t)));
+          await updateTransaction(id, transactionData);
           toast({ title: 'Success', description: 'Transaction updated successfully.' });
         } else {
-          const newTransaction = await addTransaction(transactionData);
-          setTransactions(prev => [newTransaction, ...prev]);
+          await addTransaction(transactionData);
           toast({ title: 'Success', description: 'Transaction added successfully.' });
         }
+        
+        const updatedTransactions = await getTransactions();
+        setTransactions(updatedTransactions);
+
         handleSheetClose();
       } catch (error) {
+        console.error("Form submission error:", error);
         toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
       }
     });
@@ -95,28 +100,29 @@ export default function TransactionsClient({ initialTransactions, categories }: 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async (results) => {
-          try {
-            // @ts-ignore
-            const { count, newTransactions } = await importTransactions(results.data);
-            // @ts-ignore
-            setTransactions(prev => [...newTransactions, ...prev]);
-            toast({
-              title: "Import Successful",
-              description: `${count} transactions have been imported.`,
-            });
-          } catch (error) {
-            toast({
-              variant: "destructive",
-              title: "Import Failed",
-              description: "Could not import transactions.",
-            });
-          }
-        },
-      });
+        startTransition(async () => {
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: async (results) => {
+                  try {
+                    await importTransactions(results.data);
+                    const updatedTransactions = await getTransactions();
+                    setTransactions(updatedTransactions);
+                    toast({
+                      title: "Import Successful",
+                      description: `${results.data.length} transactions have been imported.`,
+                    });
+                  } catch (error) {
+                    toast({
+                      variant: "destructive",
+                      title: "Import Failed",
+                      description: "Could not import transactions.",
+                    });
+                  }
+                },
+              });
+        });
     }
   };
 
@@ -140,11 +146,11 @@ export default function TransactionsClient({ initialTransactions, categories }: 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold font-headline">{title}</h1>
         <div className='flex gap-2'>
-            <Button variant="outline" onClick={handleExport}>
+            <Button variant="outline" onClick={handleExport} disabled={isPending}>
                 <FileDown className="mr-2 h-4 w-4" />
                 Export
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" disabled={isPending}>
               <label htmlFor="csv-import">
                 <FileUp className="mr-2 h-4 w-4" />
                 Import
@@ -153,7 +159,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
             </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
-                    <Button onClick={handleAddNew}>
+                    <Button onClick={handleAddNew} disabled={isPending}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Transaction
                     </Button>
