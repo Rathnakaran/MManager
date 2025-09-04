@@ -55,7 +55,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this transaction?')) return;
-    const originalTransactions = transactions;
+    
     setTransactions(prev => prev.filter(t => t.id !== id));
     try {
       await deleteTransaction(id);
@@ -64,7 +64,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
         description: 'Transaction deleted successfully.',
       });
     } catch (error) {
-      setTransactions(originalTransactions);
+      setTransactions(initialTransactions);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -75,33 +75,22 @@ export default function TransactionsClient({ initialTransactions, categories }: 
 
   const onFormSubmit = (transactionData: Omit<Transaction, 'id'>, id?: string) => {
     startTransition(async () => {
-        if (id) { // Update
-            const originalTransactions = transactions;
-            const updatedTransaction = { ...transactionData, id };
-            setTransactions(prev => prev.map(t => t.id === id ? updatedTransaction : t));
-            try {
-                await updateTransaction(id, transactionData);
-                toast({ title: 'Success', description: 'Transaction updated successfully.' });
-            } catch (error) {
-                setTransactions(originalTransactions);
-                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-            }
-        } else { // Add
-            const tempId = `temp-${Date.now()}`;
-            const newTransaction: Transaction = { ...transactionData, id: tempId };
-            setTransactions(prev => [newTransaction, ...prev]);
-            try {
-                const savedTransaction = await addTransaction(transactionData);
-                setTransactions(prev => prev.map(t => t.id === tempId ? savedTransaction : t));
-                toast({ title: 'Success', description: 'Transaction added successfully.' });
-            } catch (error) {
-                setTransactions(prev => prev.filter(t => t.id !== tempId));
-                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-            }
+      try {
+        if (id) {
+          const updatedTransaction = await updateTransaction(id, transactionData);
+          setTransactions(prev => prev.map(t => (t.id === id ? updatedTransaction : t)));
+          toast({ title: 'Success', description: 'Transaction updated successfully.' });
+        } else {
+          const newTransaction = await addTransaction(transactionData);
+          setTransactions(prev => [newTransaction, ...prev]);
+          toast({ title: 'Success', description: 'Transaction added successfully.' });
         }
         handleSheetClose();
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+      }
     });
-  }
+  };
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

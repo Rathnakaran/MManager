@@ -89,31 +89,20 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
 
   const onFormSubmit = (values: Omit<Budget, 'id'>, id?: string) => {
     startTransition(async () => {
-        if (id) { // Update
-            const originalBudgets = budgets;
-            const updatedBudget: Budget = { ...values, id };
-            setBudgets(prev => prev.map(b => b.id === id ? updatedBudget : b));
-            try {
-                await updateBudget(id, values);
-                toast({ title: 'Success', description: 'Budget updated successfully.' });
-            } catch (error) {
-                setBudgets(originalBudgets);
-                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-            }
-        } else { // Add
-            const tempId = `temp-${Date.now()}`;
-            const newBudget: Budget = { ...values, id: tempId };
-            setBudgets(prev => [...prev, newBudget]);
-            try {
-                const savedBudget = await addBudget(values);
-                setBudgets(prev => prev.map(b => b.id === tempId ? savedBudget : b));
-                toast({ title: 'Success', description: 'Budget added successfully.' });
-            } catch (error) {
-                setBudgets(prev => prev.filter(b => b.id !== tempId));
-                toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-            }
+      try {
+        if (id) {
+          const updatedBudget = await updateBudget(id, values);
+          setBudgets(prev => prev.map(b => (b.id === id ? updatedBudget : b)));
+          toast({ title: 'Success', description: 'Budget updated successfully.' });
+        } else {
+          const newBudget = await addBudget(values);
+          setBudgets(prev => [newBudget, ...prev]);
+          toast({ title: 'Success', description: 'Budget added successfully.' });
         }
         handleSheetClose();
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+      }
     });
   };
   

@@ -52,7 +52,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this goal?')) return;
-    const originalGoals = goals;
+    
     setGoals(prev => prev.filter(g => g.id !== id));
     try {
       await deleteGoal(id);
@@ -61,7 +61,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
         description: 'Goal deleted. "Mind voice: Annan innoru thadava koopdapattar!"',
       });
     } catch (error) {
-      setGoals(originalGoals);
+      setGoals(initialGoals);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -76,30 +76,20 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
         targetDate: values.targetDate.toISOString().split('T')[0],
     };
 
-    if (id) {
-        const originalGoals = goals;
-        setGoals(prev => prev.map(g => g.id === id ? { ...g, ...goalData } : g));
-        try {
-            await updateGoal(id, goalData);
+    try {
+        if (id) {
+            const updatedGoal = await updateGoal(id, goalData);
+            setGoals(prev => prev.map(g => g.id === id ? updatedGoal : g));
             toast({ title: 'Success', description: 'Goal updated successfully. "Vaathi Coming!"' });
-        } catch (error) {
-            setGoals(originalGoals);
-            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-        }
-    } else {
-        const tempId = `temp-${Date.now()}`;
-        const newGoal: Goal = { ...goalData, id: tempId };
-        setGoals(prev => [...prev, newGoal]);
-        try {
-            const { goal: savedGoal } = await addGoal(goalData);
-            setGoals(prev => prev.map(g => g.id === tempId ? savedGoal : g));
+        } else {
+            const newGoal = await addGoal(goalData);
+            setGoals(prev => [newGoal, ...prev]);
             toast({ title: 'Success', description: 'Goal added successfully. "It\'s a brand!"' });
-        } catch (error) {
-            setGoals(prev => prev.filter(g => g.id !== tempId));
-            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
         }
+        handleSheetClose();
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
     }
-    handleSheetClose();
   }
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);

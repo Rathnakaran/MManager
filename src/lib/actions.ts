@@ -133,20 +133,21 @@ export async function getGoalCategories(): Promise<string[]> {
     return snapshot.docs.map(doc => getGoalKeyword(doc.data().name as string));
 }
 
-export async function addGoal(goalData: Omit<Goal, 'id'>) {
+export async function addGoal(goalData: Omit<Goal, 'id'>): Promise<Goal> {
   const newGoalRef = await addDoc(collection(db, 'goals'), goalData);
   revalidatePath('/goals');
   revalidatePath('/dashboard');
   const newGoal = { id: newGoalRef.id, ...goalData };
-  return { success: true, goal: newGoal };
+  return newGoal;
 }
 
-export async function updateGoal(id: string, goalData: Partial<Goal>) {
+export async function updateGoal(id: string, goalData: Partial<Goal>): Promise<Goal> {
   const goalRef = doc(db, 'goals', id);
   await updateDoc(goalRef, goalData);
   revalidatePath('/goals');
   revalidatePath('/dashboard');
-  return { success: true, goal: {id, ...goalData} };
+  const updatedDoc = await getDoc(goalRef);
+  return { id: updatedDoc.id, ...updatedDoc.data() } as Goal;
 }
 
 export async function deleteGoal(id: string) {
