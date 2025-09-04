@@ -31,6 +31,7 @@ import {
   Dog,
   Pencil,
   Trash2,
+  KeyRound,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -58,7 +59,8 @@ export type IconName =
   | 'Receipt'
   | 'Dog'
   | 'Pencil'
-  | 'Trash2';
+  | 'Trash2'
+  | 'KeyRound';
 
 export const Icons = {
   dashboard: LayoutDashboard,
@@ -92,6 +94,7 @@ export const Icons = {
   Dog,
   Pencil,
   Trash2,
+  KeyRound,
 };
 
 const iconMap: Record<string, LucideIcon> = {
@@ -119,6 +122,7 @@ const iconMap: Record<string, LucideIcon> = {
   Dog,
   Pencil,
   Trash2,
+  KeyRound,
 };
 
 export const getIconByName = (name: string): LucideIcon => {

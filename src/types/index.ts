@@ -38,6 +38,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  name: string;
   password?: string; // Should be hashed
   dateOfBirth: string; // ISO 8601 format
 }
