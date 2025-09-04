@@ -59,7 +59,7 @@ export function StatCards({ totalSpent, remainingBudget, totalBudget, view }: St
                 </CardHeader>
                 <CardContent>
                      <p className="text-sm text-muted-foreground mb-2">You've spent <span className="font-bold text-foreground">{budgetProgress.toFixed(0)}%</span> of your budget.</p>
-                     <Progress value={budgetProgress} aria-label={`${budgetProgress.toFixed(0)}% of budget spent`} className="h-2" />
+                     <Progress value={Math.min(budgetProgress, 100)} aria-label={`${budgetProgress.toFixed(0)}% of budget spent`} className="h-2" />
                 </CardContent>
             </Card>
         </div>
