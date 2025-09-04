@@ -16,7 +16,7 @@ import Papa from 'papaparse';
 
 interface TransactionsClientProps {
   initialTransactions: Transaction[];
-  categories: string[];
+  categories: { budgetCategories: string[], goalCategories: string[] };
 }
 
 const transactionTitles = [
@@ -59,6 +59,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
         skipEmptyLines: true,
         complete: async (results) => {
           try {
+            // @ts-ignore
             const { count } = await importTransactions(results.data);
             toast({
               title: "Import Successful",

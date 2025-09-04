@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +20,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Lightbulb } from 'lucide-react';
@@ -43,7 +46,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface TransactionFormProps {
   transaction?: Transaction | null;
-  categories: string[];
+  categories: { budgetCategories: string[], goalCategories: string[] };
   onFinished: () => void;
 }
 
@@ -94,7 +97,7 @@ export default function TransactionForm({ transaction, categories, onFinished }:
     startTransition(async () => {
         setIsSuggesting(true);
         try {
-            const result = await suggestCategory({ description, categories });
+            const result = await suggestCategory({ description, categories: categories.budgetCategories });
             if (result.suggestedCategory) {
                 form.setValue('category', result.suggestedCategory, { shouldValidate: true });
                 toast({ title: 'Suggestion applied!', description: `Category set to "${result.suggestedCategory}".`});
@@ -213,9 +216,18 @@ export default function TransactionForm({ transaction, categories, onFinished }:
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                {categories.map(cat => (
-                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                ))}
+                                <SelectGroup>
+                                    <SelectLabel>Goal Contributions</SelectLabel>
+                                    {categories.goalCategories.map(cat => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))}
+                                </SelectGroup>
+                                <SelectGroup>
+                                    <SelectLabel>Budget Categories</SelectLabel>
+                                    {categories.budgetCategories.map(cat => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))}
+                                </SelectGroup>
                                 <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                         </Select>

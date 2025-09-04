@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   ArrowRightLeft,
@@ -29,6 +30,7 @@ import {
   Receipt,
   Dog,
   Pencil,
+  Trash2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -55,7 +57,8 @@ export type IconName =
   | 'Plane'
   | 'Receipt'
   | 'Dog'
-  | 'Pencil';
+  | 'Pencil'
+  | 'Trash2';
 
 export const Icons = {
   dashboard: LayoutDashboard,
@@ -88,6 +91,7 @@ export const Icons = {
   Receipt,
   Dog,
   Pencil,
+  Trash2,
 };
 
 const iconMap: Record<string, LucideIcon> = {
@@ -114,6 +118,7 @@ const iconMap: Record<string, LucideIcon> = {
   Receipt,
   Dog,
   Pencil,
+  Trash2,
 };
 
 export const getIconByName = (name: string): LucideIcon => {

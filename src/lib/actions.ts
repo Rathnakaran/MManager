@@ -1,3 +1,4 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -16,6 +17,11 @@ let goals: Goal[] = sampleGoals.map((g, i) => ({ ...g, id: `goal-${i}` }));
 let recurring: Recurring[] = sampleRecurring.map((r, i) => ({ ...r, id: `recur-${i}` }));
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+
+const getGoalKeyword = (goalName: string) => {
+    return goalName.split(' ')[0];
+}
 
 // --- Data Fetching ---
 export async function getData() {
@@ -43,6 +49,11 @@ export async function getBudgetCategories() {
     return budgets.map(b => b.category);
 }
 
+export async function getGoalCategories() {
+    await delay(100);
+    return goals.map(g => getGoalKeyword(g.name));
+}
+
 
 // --- Transaction Actions ---
 export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
@@ -52,6 +63,17 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
     id: `trans-${Date.now()}`,
   };
   transactions.unshift(newTransaction);
+
+  // Check if the transaction category is a goal contribution
+  if (newTransaction.type === 'expense') {
+      const goalIndex = goals.findIndex(g => getGoalKeyword(g.name) === newTransaction.category);
+      if (goalIndex !== -1) {
+          goals[goalIndex].currentAmount += newTransaction.amount;
+          revalidatePath('/goals');
+      }
+  }
+
+
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
   revalidatePath('/recurring');
@@ -66,6 +88,7 @@ export async function updateTransaction(id: string, transactionData: Partial<Tra
     revalidatePath('/transactions');
     revalidatePath('/dashboard');
     revalidatePath('/recurring');
+    revalidatePath('/goals');
     return { success: true, transaction: transactions[index] };
   }
   return { success: false, message: 'Transaction not found' };
@@ -77,6 +100,7 @@ export async function deleteTransaction(id: string) {
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
   revalidatePath('/recurring');
+  revalidatePath('/goals');
   return { success: true };
 }
 
@@ -194,16 +218,35 @@ export async function deleteRecurring(id: string) {
 
 export async function importTransactions(data: any[]) {
     await delay(1000);
-    const newTransactions: Transaction[] = data.map(row => ({
-        id: `trans-${Date.now()}-${Math.random()}`,
-        date: new Date(row.Date).toISOString(),
-        description: row.Description,
-        amount: parseFloat(row.Amount),
-        type: parseFloat(row.Amount) >= 0 ? 'income' : 'expense',
-        category: row.Category,
-    }));
-    transactions.unshift(...newTransactions);
-    revalidatePath('/transactions');
-    revalidatePath('/dashboard');
-    return { success: true, count: newTransactions.length };
+    let count = 0;
+    for (const row of data) {
+        if (!row.Date || !row.Description || !row.Amount || !row.Category) continue;
+
+        const newTransaction: Transaction = {
+            id: `trans-${Date.now()}-${Math.random()}`,
+            date: new Date(row.Date).toISOString(),
+            description: row.Description,
+            amount: parseFloat(row.Amount),
+            type: parseFloat(row.Amount) >= 0 ? 'income' : 'expense',
+            category: row.Category,
+        };
+
+        if (newTransaction.type === 'expense') {
+            const goalIndex = goals.findIndex(g => getGoalKeyword(g.name) === newTransaction.category);
+            if (goalIndex !== -1) {
+                goals[goalIndex].currentAmount += newTransaction.amount;
+            }
+        }
+        
+        transactions.unshift(newTransaction);
+        count++;
+    }
+    
+    if (count > 0) {
+      revalidatePath('/transactions');
+      revalidatePath('/dashboard');
+      revalidatePath('/goals');
+    }
+
+    return { success: true, count };
 }

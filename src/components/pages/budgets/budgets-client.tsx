@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Budget, Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { deleteBudget } from '@/lib/actions';
@@ -84,11 +84,15 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
         .reduce((sum, t) => sum + t.amount, 0);
       const remaining = budget.amount - spent;
       
-      let status: 'On Track' | 'Overspent' | 'N/A' = 'On Track';
+      let status: 'Nalla Padiya Pogudhu!' | 'Pocket Kaali!' | 'Just for Kanakku' = 'Nalla Padiya Pogudhu!';
+      let badgeClass = 'bg-green-500 text-white';
+
       if (budget.amount === 0) {
-        status = 'N/A';
+        status = 'Just for Kanakku';
+        badgeClass = 'bg-gray-500 text-white';
       } else if (spent > budget.amount) {
-        status = 'Overspent';
+        status = 'Pocket Kaali!';
+        badgeClass = 'bg-red-500 text-white';
       }
 
       return {
@@ -96,6 +100,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
         spent,
         remaining,
         status,
+        badgeClass
       }
     })
   }, [initialBudgets, initialTransactions]);
@@ -157,14 +162,19 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
                                     {formatCurrency(budget.remaining)}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    <Badge variant={budget.status === 'Overspent' ? 'destructive' : 'default'} className={budget.status === 'On Track' ? 'bg-yellow-400 text-black' : ''}>
+                                    <Badge variant={'default'} className={budget.badgeClass}>
                                         {budget.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-center">
-                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(budget)}>
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
+                                <TableCell>
+                                    <div className="flex items-center justify-center gap-1">
+                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(budget)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(budget.id)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )

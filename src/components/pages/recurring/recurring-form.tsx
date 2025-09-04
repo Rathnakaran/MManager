@@ -20,6 +20,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
@@ -44,7 +46,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface RecurringFormProps {
   recurring?: Recurring | null;
-  categories: string[];
+  categories: { budgetCategories: string[], goalCategories: string[] };
   onFinished: () => void;
 }
 
@@ -153,9 +155,18 @@ export default function RecurringForm({ recurring, categories, onFinished }: Rec
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                {categories.map(cat => (
-                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                ))}
+                                <SelectGroup>
+                                    <SelectLabel>Goal Contributions</SelectLabel>
+                                    {categories.goalCategories.map(cat => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))}
+                                </SelectGroup>
+                                <SelectGroup>
+                                    <SelectLabel>Budget Categories</SelectLabel>
+                                    {categories.budgetCategories.map(cat => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))}
+                                </SelectGroup>
                                 <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                         </Select>
@@ -173,7 +184,7 @@ export default function RecurringForm({ recurring, categories, onFinished }: Rec
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
+                    </Trigger>
                     </FormControl>
                     <SelectContent>
                     <SelectItem value="monthly">Monthly</SelectItem>

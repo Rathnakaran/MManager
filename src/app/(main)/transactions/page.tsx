@@ -1,9 +1,11 @@
-import { getTransactions, getBudgetCategories } from '@/lib/actions';
+
+import { getTransactions, getBudgetCategories, getGoalCategories } from '@/lib/actions';
 import TransactionsClient from '@/components/pages/transactions/transactions-client';
 
 export default async function TransactionsPage() {
   const transactions = await getTransactions();
-  const categories = await getBudgetCategories();
+  const budgetCategories = await getBudgetCategories();
+  const goalCategories = await getGoalCategories();
 
-  return <TransactionsClient initialTransactions={transactions} categories={categories} />;
+  return <TransactionsClient initialTransactions={transactions} categories={{ budgetCategories, goalCategories }} />;
 }

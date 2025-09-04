@@ -11,7 +11,7 @@ import RecurringTable from './recurring-table';
 
 interface RecurringClientProps {
   initialRecurring: Recurring[];
-  categories: string[];
+  categories: { budgetCategories: string[], goalCategories: string[] };
 }
 
 const recurringTitles = [
