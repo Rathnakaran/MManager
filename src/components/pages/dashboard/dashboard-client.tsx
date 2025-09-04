@@ -1,10 +1,13 @@
+
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { Transaction, Budget, Goal } from '@/types';
 import { StatCards } from './stat-cards';
 import { ExpenseChart } from './charts';
 import { BudgetStatus } from './budget-status';
 import { AiAdvisor } from './ai-advisor';
+import { GoalProgress } from './goal-progress';
 
 interface DashboardClientProps {
   transactions: Transaction[];
@@ -12,11 +15,28 @@ interface DashboardClientProps {
   goals: Goal[];
 }
 
+const welcomeMessages = [
+  "Welcome Back, Boss!",
+  "Enna, selavu panrathuku ready ah?",
+  "Vanakkam, Thalaiva!",
+  "Hey Champion, let's win the finance game!",
+  "Vaanga, 'FinWise' pannalam!",
+  "Kalakunga, Sir!",
+];
+
 export default function DashboardClient({
   transactions,
   budgets,
   goals,
 }: DashboardClientProps) {
+  const [welcomeMessage, setWelcomeMessage] = useState(welcomeMessages[0]);
+
+  useEffect(() => {
+    // This runs only on the client, after the initial render, to avoid hydration mismatch
+    const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+    setWelcomeMessage(welcomeMessages[randomIndex]);
+  }, []);
+
   const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
   const totalSpent = transactions
     .filter(t => t.type === 'expense')
@@ -35,7 +55,7 @@ export default function DashboardClient({
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-bold font-headline">Welcome Back, Boss!</h1>
+      <h1 className="text-4xl font-bold font-headline">{welcomeMessage}</h1>
 
       <StatCards
         totalSpent={totalSpent}
@@ -48,6 +68,8 @@ export default function DashboardClient({
         remainingBudget={remainingBudget}
         expenseBreakdown={expenseBreakdown}
       />
+
+      <GoalProgress goals={goals} />
       
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
