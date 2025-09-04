@@ -5,22 +5,22 @@ const today = new Date();
 const currentMonth = today.toISOString().slice(0, 7);
 
 export const sampleBudgets: Omit<Budget, 'id'>[] = [
-  { category: 'Groceries', amount: 400, icon: 'ShoppingCart' },
-  { category: 'Dining Out', amount: 250, icon: 'Utensils' },
-  { category: 'Transportation', amount: 150, icon: 'Car' },
-  { category: 'Rent/Mortgage', amount: 1500, icon: 'Home' },
-  { category: 'Entertainment', amount: 100, icon: 'Ticket' },
-  { category: 'Health', amount: 200, icon: 'HeartPulse' },
-  { category: 'Apparel', amount: 150, icon: 'ShoppingBag' },
-  { category: 'Bills & Utilities', amount: 200, icon: 'Receipt' },
-  { category: 'Personal Care', amount: 75, icon: 'Heart' },
-  { category: 'Gifts & Donations', amount: 50, icon: 'Gift' },
-  { category: 'Travel', amount: 300, icon: 'Plane' },
-  { category: 'Education', amount: 100, icon: 'Briefcase' },
-  { category: 'Kids', amount: 200, icon: 'Users' },
-  { category: 'Pets', amount: 75, icon: 'Dog' },
-  { category: 'Investments', amount: 500, icon: 'PiggyBank' },
-  { category: 'Miscellaneous', amount: 100, icon: 'CircleDollarSign' },
+  { category: 'Groceries', amount: 4000, icon: 'ShoppingCart' },
+  { category: 'Dining Out', amount: 2500, icon: 'Utensils' },
+  { category: 'Transportation', amount: 1500, icon: 'Car' },
+  { category: 'Rent/Mortgage', amount: 15000, icon: 'Home' },
+  { category: 'Entertainment', amount: 1000, icon: 'Ticket' },
+  { category: 'Health', amount: 2000, icon: 'HeartPulse' },
+  { category: 'Apparel', amount: 1500, icon: 'ShoppingBag' },
+  { category: 'Bills & Utilities', amount: 2000, icon: 'Receipt' },
+  { category: 'Personal Care', amount: 750, icon: 'Heart' },
+  { category: 'Gifts & Donations', amount: 500, icon: 'Gift' },
+  { category: 'Travel', amount: 3000, icon: 'Plane' },
+  { category: 'Education', amount: 1000, icon: 'Briefcase' },
+  { category: 'Kids', amount: 2000, icon: 'Users' },
+  { category: 'Pets', amount: 750, icon: 'Dog' },
+  { category: 'Investments', amount: 5000, icon: 'PiggyBank' },
+  { category: 'Miscellaneous', amount: 1000, icon: 'CircleDollarSign' },
 ];
 
 export const sampleTransactions: Omit<Transaction, 'id'>[] = [
