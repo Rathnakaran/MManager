@@ -87,9 +87,6 @@ export default function SettingsPage() {
                     mode="single"
                     selected={dob}
                     onSelect={setDob}
-                    captionLayout="dropdown-buttons"
-                    fromYear={1950}
-                    toYear={new Date().getFullYear()}
                     initialFocus
                   />
                 </PopoverContent>

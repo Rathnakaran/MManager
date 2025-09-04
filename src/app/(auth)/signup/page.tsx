@@ -153,9 +153,6 @@ export default function SignupPage() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            captionLayout="dropdown-buttons"
-                            fromYear={1950}
-                            toYear={new Date().getFullYear()}
                             disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                             initialFocus
                         />
