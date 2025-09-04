@@ -53,6 +53,19 @@ export async function getUserByUsername(username: string, password?: string): Pr
     return { id: userDoc.id, ...userDoc.data() } as User;
 }
 
+export async function getUsers(): Promise<User[]> {
+    const usersCollection = collection(db, 'users');
+    const snapshot = await getDocs(usersCollection);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+}
+
+export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email'>>) {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, userData);
+    revalidatePath('/settings');
+    return { success: true };
+}
+
 export async function updateUserPassword(userId: string, newPassword: string) {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, { password: newPassword });
@@ -269,3 +282,5 @@ export async function deleteRecurringTransaction(id: string) {
     revalidatePath('/recurring');
     return { success: true };
 }
+
+    

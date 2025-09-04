@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, UserPlus, KeyRound } from 'lucide-react';
+import { CalendarIcon, UserPlus, KeyRound, UserCog, Edit, Users } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -40,9 +40,12 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { createUser, getUserByUsername, updateUserPassword } from '@/lib/actions';
+import { createUser, getUserByUsername, updateUserPassword, getUsers, updateUser } from '@/lib/actions';
 import { Separator } from '@/components/ui/separator';
 import type { User } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
 
 const tamilQuotes = [
   "Nama Oru Thadava Mudivu Panita, Aprom Nama Pecha Nameye Kekkamattom.",
@@ -62,6 +65,12 @@ const createUserFormSchema = z.object({
 
 type CreateUserFormValues = z.infer<typeof createUserFormSchema>;
 
+const editUserFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+});
+type EditUserFormValues = z.infer<typeof editUserFormSchema>;
+
 const changePasswordFormSchema = z.object({
   newPassword: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
@@ -74,23 +83,38 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordFormSchema>;
 
 export default function SettingsPage() {
   const [quote, setQuote] = useState(tamilQuotes[0]);
-  const [user, setUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+
+
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
-  // A placeholder to get a user. In a real app, this would come from a session.
+  const fetchUsers = async () => {
+      const [fetchedUser, allFetchedUsers] = await Promise.all([
+          getUserByUsername('Rathnakaran'),
+          getUsers()
+      ]);
+      setCurrentUser(fetchedUser);
+      setAllUsers(allFetchedUsers);
+  };
+
   useEffect(() => {
-    const fetchUser = async () => {
-        const fetchedUser = await getUserByUsername('Rathnakaran');
-        setUser(fetchedUser);
-    };
-    fetchUser();
+    fetchUsers();
     setQuote(tamilQuotes[Math.floor(Math.random() * tamilQuotes.length)]);
   }, []);
 
-  const userForm = useForm<CreateUserFormValues>({
+  const createUserForm = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserFormSchema),
     defaultValues: { username: '', email: '', password: '', name: '' },
+  });
+
+  const editUserForm = useForm<EditUserFormValues>({
+    resolver: zodResolver(editUserFormSchema),
   });
 
   const passwordForm = useForm<ChangePasswordFormValues>({
@@ -106,16 +130,16 @@ export default function SettingsPage() {
   };
 
   const onChangePasswordSubmit = (values: ChangePasswordFormValues) => {
-    if (!user) return;
+    if (!selectedUser) return;
     startTransition(async () => {
         try {
-            await updateUserPassword(user.id, values.newPassword);
+            await updateUserPassword(selectedUser.id, values.newPassword);
             toast({
                 title: 'Success!',
-                description: 'Password changed successfully. "Vaathi coming!"',
+                description: `Password for ${selectedUser.username} changed successfully. "Vaathi coming!"`,
             });
             passwordForm.reset();
-            document.getElementById('close-password-dialog')?.click();
+            setIsChangePasswordOpen(false);
         } catch (error) {
             toast({
                 variant: 'destructive',
@@ -134,12 +158,13 @@ export default function SettingsPage() {
             dateOfBirth: values.dateOfBirth.toISOString().split('T')[0],
         }
         await createUser(userData);
+        await fetchUsers(); // Re-fetch users to update the list
         toast({
           title: 'Success!',
           description: `User "${values.username}" has been created.`,
         });
-        userForm.reset();
-        document.getElementById('close-create-user-dialog')?.click();
+        createUserForm.reset();
+        setIsCreateUserOpen(false);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -150,7 +175,39 @@ export default function SettingsPage() {
     });
   };
 
-  if (!user) {
+  const onEditUserSubmit = (values: EditUserFormValues) => {
+    if (!selectedUser) return;
+    startTransition(async () => {
+      try {
+        await updateUser(selectedUser.id, values);
+        await fetchUsers();
+        toast({
+          title: 'Success!',
+          description: `User "${selectedUser.username}" has been updated.`,
+        });
+        setIsEditUserOpen(false);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to update user.',
+        });
+      }
+    });
+  };
+  
+  const openEditDialog = (user: User) => {
+    setSelectedUser(user);
+    editUserForm.reset({ name: user.name, email: user.email });
+    setIsEditUserOpen(true);
+  }
+
+  const openPasswordDialog = (user: User) => {
+    setSelectedUser(user);
+    setIsChangePasswordOpen(true);
+  }
+
+  if (!currentUser) {
     return <div>Loading user profile...</div>; // Or a skeleton loader
   }
 
@@ -163,94 +220,48 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle className="flex items-center gap-2"><UserCog /> My Profile</CardTitle>
           <CardDescription>
-            This is how others will see you on the site.
+            This is your personal information.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" defaultValue={user.name} />
+              <Input id="name" defaultValue={currentUser.name} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue={user.email} />
+              <Input id="email" type="email" defaultValue={currentUser.email} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="dob">Date of Birth</Label>
-               <Input id="dob" disabled value={format(new Date(user.dateOfBirth), 'PPP')} />
+               <Input id="dob" disabled value={format(new Date(currentUser.dateOfBirth), 'PPP')} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input id="username" defaultValue={user.username} disabled />
+              <Input id="username" defaultValue={currentUser.username} disabled />
             </div>
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="secondary"><KeyRound className="mr-2"/> Change Password</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Change Your Password</DialogTitle>
-                  <DialogDescription>
-                    Enter a new password below. Make it a strong one, 'thalaiva'!
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...passwordForm}>
-                  <form onSubmit={passwordForm.handleSubmit(onChangePasswordSubmit)} className="space-y-4">
-                    <FormField
-                      control={passwordForm.control}
-                      name="newPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>New Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="********" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={passwordForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm New Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="********" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <DialogFooter>
-                      <DialogClose asChild><Button id="close-password-dialog" type="button" variant="ghost">Cancel</Button></DialogClose>
-                      <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Password'}</Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-            <Button onClick={handleProfileUpdate}>Save Profile</Button>
+            <Button variant="secondary" onClick={() => openPasswordDialog(currentUser)}><KeyRound className="mr-2"/> Change My Password</Button>
+            <Button onClick={handleProfileUpdate}>Save My Profile</Button>
         </CardFooter>
       </Card>
       
       <Separator />
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><UserPlus /> Admin Panel</CardTitle>
-          <CardDescription>
-            Create a new user account. Only admins can see this panel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Dialog>
+        <CardHeader className="flex flex-row justify-between items-start">
+            <div>
+                <CardTitle className="flex items-center gap-2"><Users /> User Management</CardTitle>
+                <CardDescription>
+                    Create, view, and manage user accounts for the application.
+                </CardDescription>
+            </div>
+            <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
                 <DialogTrigger asChild>
                     <Button><UserPlus className="mr-2 h-4 w-4" /> Create New User</Button>
                 </DialogTrigger>
@@ -261,108 +272,91 @@ export default function SettingsPage() {
                             Fill in the details below to create a new user account.
                         </DialogDescription>
                     </DialogHeader>
-                     <Form {...userForm}>
-                        <form onSubmit={userForm.handleSubmit(onCreateUserSubmit)} className="space-y-4">
-                            <FormField
-                                control={userForm.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Full Name</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., Superstar" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                            <FormField
-                                control={userForm.control}
-                                name="username"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="new_user" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                            <FormField
-                                control={userForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input type="email" placeholder="user@example.com" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                            <FormField
-                                control={userForm.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Password</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" placeholder="********" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                            <FormField
-                                control={userForm.control}
-                                name="dateOfBirth"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col pt-2">
-                                    <FormLabel>Date of Birth</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                            variant={'outline'}
-                                            className={cn(
-                                                'w-full pl-3 text-left font-normal',
-                                                !field.value && 'text-muted-foreground'
-                                            )}
-                                            >
-                                            {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                            </Button>
-                                        </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={field.onChange}
-                                            captionLayout="buttons"
-                                            disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                                            initialFocus
-                                        />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
+                     <Form {...createUserForm}>
+                        <form onSubmit={createUserForm.handleSubmit(onCreateUserSubmit)} className="space-y-4">
+                            <FormField control={createUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="e.g., Superstar" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                            <FormField control={createUserForm.control} name="username" render={({ field }) => (<FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="new_user" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                            <FormField control={createUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="user@example.com" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                            <FormField control={createUserForm.control} name="password" render={({ field }) => (<FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                            <FormField control={createUserForm.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col pt-2"><FormLabel>Date of Birth</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={'outline'} className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="buttons" disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
                             <DialogFooter className='pt-4'>
-                                <DialogClose asChild><Button id="close-create-user-dialog" type="button" variant="ghost">Cancel</Button></DialogClose>
-                                <Button type="submit" disabled={isPending}>
-                                    {isPending ? 'Creating...' : 'Create User'}
-                                </Button>
+                                <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                                <Button type="submit" disabled={isPending}>{isPending ? 'Creating...' : 'Create User'}</Button>
                             </DialogFooter>
                         </form>
                     </Form>
                 </DialogContent>
             </Dialog>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            {allUsers.map((user) => (
+                <Card key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                        <Avatar>
+                           <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-semibold">{user.name} {user.id === currentUser.id && <Badge variant="secondary">You</Badge>}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <p className="text-xs text-muted-foreground">@{user.username}</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2 mt-4 sm:mt-0">
+                        <Button variant="outline" size="sm" onClick={() => openEditDialog(user)}><Edit className="mr-2 h-3 w-3" /> Edit</Button>
+                        <Button variant="secondary" size="sm" onClick={() => openPasswordDialog(user)}><KeyRound className="mr-2 h-3 w-3" /> Change Password</Button>
+                    </div>
+                </Card>
+            ))}
         </CardContent>
       </Card>
+
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User: @{selectedUser?.username}</DialogTitle>
+            <DialogDescription>
+              Update the user's name and email address.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editUserForm}>
+            <form onSubmit={editUserForm.handleSubmit(onEditUserSubmit)} className="space-y-4">
+              <FormField control={editUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={editUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Changes'}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Change Password Dialog */}
+      <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password for @{selectedUser?.username}</DialogTitle>
+            <DialogDescription>
+              Enter a new password. Make it a strong one, 'thalaiva'!
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...passwordForm}>
+            <form onSubmit={passwordForm.handleSubmit(onChangePasswordSubmit)} className="space-y-4">
+              <FormField control={passwordForm.control} name="newPassword" render={({ field }) => (<FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (<FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Password'}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
+
+    
