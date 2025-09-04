@@ -159,4 +159,3 @@ export default function RecurringClient({ initialRecurringTransactions, categori
     </div>
   );
 }
-
