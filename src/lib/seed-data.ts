@@ -1,4 +1,5 @@
-import type { Transaction, Budget, Goal } from '@/types';
+
+import type { Transaction, Budget, Goal, RecurringTransaction } from '@/types';
 
 const today = new Date();
 const currentMonth = today.toISOString().slice(0, 7);
@@ -41,5 +42,13 @@ export const sampleGoals: Omit<Goal, 'id'>[] = [
   { name: 'New iPhone 15', targetAmount: 80000, currentAmount: 25000, targetDate: new Date(today.getFullYear(), today.getMonth() + 4, 1).toISOString() },
   { name: 'Emergency Fund', targetAmount: 100000, currentAmount: 65000, targetDate: new Date(today.getFullYear() + 1, 0, 1).toISOString() },
 ];
+
+export const sampleRecurringTransactions: Omit<RecurringTransaction, 'id'>[] = [
+    { description: 'Monthly Salary', category: 'Income', amount: 200000.00, type: 'income', frequency: 'Monthly', dayOfMonth: 1 },
+    { description: 'House Rent', category: 'House Rent', amount: 10000.00, type: 'expense', frequency: 'Monthly', dayOfMonth: 5 },
+    { description: 'Netflix', category: 'Subscriptions', amount: 199.00, type: 'expense', frequency: 'Monthly', dayOfMonth: 10 },
+    { description: 'Amma SIP', category: 'Amma SIP', amount: 5000.00, type: 'expense', frequency: 'Monthly', dayOfMonth: 15 },
+];
+
 
 export const getBudgetCategories = () => sampleBudgets.map(b => b.category);

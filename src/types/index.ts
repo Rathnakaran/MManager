@@ -22,3 +22,14 @@ export interface Goal {
   currentAmount: number;
   targetDate: string; // ISO 8601 format
 }
+
+export interface RecurringTransaction {
+  id: string;
+  description: string;
+  category: string;
+  amount: number;
+  type: 'income' | 'expense';
+  frequency: 'Monthly' | 'Weekly' | 'Yearly';
+  dayOfWeek?: string; // e.g., 'Monday'
+  dayOfMonth?: number; // 1-31
+}

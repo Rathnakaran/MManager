@@ -6,13 +6,16 @@ import {
   sampleTransactions,
   sampleBudgets,
   sampleGoals,
+  sampleRecurringTransactions,
 } from './seed-data';
-import type { Transaction, Budget, Goal } from '@/types';
+import type { Transaction, Budget, Goal, RecurringTransaction } from '@/types';
 
 // Simulate a database
 let transactions: Transaction[] = sampleTransactions.map((t, i) => ({ ...t, id: `trans-${i}` }));
 let budgets: Budget[] = sampleBudgets.map((b, i) => ({ ...b, id: `budget-${i}` }));
 let goals: Goal[] = sampleGoals.map((g, i) => ({ ...g, id: `goal-${i}` }));
+let recurringTransactions: RecurringTransaction[] = sampleRecurringTransactions.map((r, i) => ({ ...r, id: `recurring-${i}`}));
+
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -203,3 +206,40 @@ export async function importTransactions(data: any[]) {
 
     return { success: true, count };
 }
+
+
+// --- Recurring Transaction Actions ---
+export async function getRecurringTransactions() {
+  await delay(200);
+  return recurringTransactions;
+}
+
+export async function addRecurringTransaction(recTransactionData: Omit<RecurringTransaction, 'id'>) {
+    await delay(500);
+    const newRecTransaction: RecurringTransaction = {
+        ...recTransactionData,
+        id: `recurring-${Date.now()}`,
+    };
+    recurringTransactions.push(newRecTransaction);
+    revalidatePath('/recurring');
+    return { success: true, transaction: newRecTransaction };
+}
+
+export async function updateRecurringTransaction(id: string, recTransactionData: Partial<RecurringTransaction>) {
+    await delay(500);
+    const index = recurringTransactions.findIndex(rt => rt.id === id);
+    if (index !== -1) {
+        recurringTransactions[index] = { ...recurringTransactions[index], ...recTransactionData };
+        revalidatePath('/recurring');
+        return { success: true, transaction: recurringTransactions[index] };
+    }
+    return { success: false, message: 'Recurring transaction not found' };
+}
+
+export async function deleteRecurringTransaction(id: string) {
+    await delay(500);
+    recurringTransactions = recurringTransactions.filter(rt => rt.id !== id);
+    revalidatePath('/recurring');
+    return { success: true };
+}
+
