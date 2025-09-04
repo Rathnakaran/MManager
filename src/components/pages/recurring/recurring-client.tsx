@@ -73,7 +73,7 @@ export default function RecurringClient({ initialRecurringTransactions, categori
     
   const getFrequencyText = (item: RecurringTransaction) => {
       if(item.frequency === 'Monthly' && item.dayOfMonth) {
-        return `Monthly (Day ${item.dayOfMonth})`;
+        return `On day ${item.dayOfMonth}`;
       }
       return item.frequency;
   }
@@ -108,21 +108,25 @@ export default function RecurringClient({ initialRecurringTransactions, categori
                 <CardDescription>Set it and forget it. Your financial life on autopilot.</CardDescription>
             </CardHeader>
             <CardContent className='divide-y divide-border'>
-                <div className="hidden md:grid md:grid-cols-5 items-center px-4 py-2 font-semibold">
-                    <div className="col-span-2">Description</div>
-                    <div>Category</div>
-                    <div>Frequency</div>
-                    <div className="text-right">Amount</div>
+                <div className="hidden md:grid md:grid-cols-12 items-center px-4 py-2 font-semibold">
+                    <div className="col-span-4">Description</div>
+                    <div className="col-span-3">Category</div>
+                    <div className="col-span-2">Frequency</div>
+                    <div className="col-span-2 text-right">Amount</div>
+                    <div className="col-span-1"></div>
                 </div>
                  {initialRecurringTransactions.map((item) => (
-                    <div key={item.id} className="grid grid-cols-3 md:grid-cols-5 items-center px-4 py-3">
-                        <div className="col-span-3 md:col-span-2 font-medium">{item.description}</div>
-                        <div className="hidden md:block"><Badge variant="outline">{item.category}</Badge></div>
-                        <div className="text-muted-foreground text-sm">{getFrequencyText(item)}</div>
-                        <div className={`font-medium text-right ${item.type === 'income' ? 'text-green-500' : 'text-destructive'}`}>
+                    <div key={item.id} className="grid grid-cols-2 md:grid-cols-12 items-center px-4 py-3 gap-y-2">
+                        <div className="col-span-2 md:col-span-4 flex flex-col">
+                            <span className="font-medium">{item.description}</span>
+                            <span className="md:hidden text-sm text-muted-foreground">{item.category}</span>
+                        </div>
+                        <div className="hidden md:col-span-3 md:block"><Badge variant="outline">{item.category}</Badge></div>
+                        <div className="md:col-span-2 text-muted-foreground text-sm">{getFrequencyText(item)}</div>
+                        <div className={`md:col-span-2 font-medium text-right ${item.type === 'income' ? 'text-green-500' : 'text-destructive'}`}>
                             {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
                         </div>
-                        <div className="text-right">
+                        <div className="md:col-span-1 text-right">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0">
