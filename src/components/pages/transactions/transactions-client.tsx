@@ -1,9 +1,9 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/icons';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DataTable } from './data-table';
 import { columns } from './columns';
@@ -19,10 +19,22 @@ interface TransactionsClientProps {
   categories: string[];
 }
 
+const transactionTitles = [
+    "Your 'Kanaku-Pillai' Diary",
+    "Kanaku Ellam Correct-a Irukanum!",
+    "Where did the money go, machi?",
+    "Every Rupee tells a story",
+];
+
 export default function TransactionsClient({ initialTransactions, categories }: TransactionsClientProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [title, setTitle] = useState(transactionTitles[0]);
   const { toast } = useToast();
+  
+  useEffect(() => {
+    setTitle(transactionTitles[Math.floor(Math.random() * transactionTitles.length)]);
+  }, []);
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -82,7 +94,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold font-headline">Transactions</h1>
+        <h1 className="text-2xl font-bold font-headline">{title}</h1>
         <div className='flex gap-2'>
             <Button variant="outline" onClick={handleExport}>
                 <FileDown className="mr-2 h-4 w-4" />

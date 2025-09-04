@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Goal } from '@/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Target } from 'lucide-react';
@@ -17,10 +17,22 @@ interface GoalsClientProps {
   initialGoals: Goal[];
 }
 
+const goalTitles = [
+    "Your Future, Your Sketch!",
+    "Sketch Pota, Life-u Jeichidalam!",
+    "Set Your Goals, Make it 'Brand'!",
+    "Dream Big, Plan Bigger!",
+];
+
 export default function GoalsClient({ initialGoals }: GoalsClientProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [title, setTitle] = useState(goalTitles[0]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setTitle(goalTitles[Math.floor(Math.random() * goalTitles.length)]);
+  }, []);
 
   const handleEdit = (goal: Goal) => {
     setSelectedGoal(goal);
@@ -60,7 +72,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold font-headline">Goals</h1>
+        <h1 className="text-2xl font-bold font-headline">{title}</h1>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button onClick={handleAddNew}>

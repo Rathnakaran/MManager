@@ -55,7 +55,7 @@ export default function DashboardClient({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold font-headline">{welcomeMessage}</h1>
+      <h1 className="text-2xl font-bold font-headline">{welcomeMessage}</h1>
 
       <StatCards
         totalSpent={totalSpent}

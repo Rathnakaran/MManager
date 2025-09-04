@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Recurring } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -14,9 +14,21 @@ interface RecurringClientProps {
   categories: string[];
 }
 
+const recurringTitles = [
+    "Your Regular 'Varavu-Selavu'",
+    "Varavu Ettana, Selavu Pathana?",
+    "Master Your Monthly Bills",
+    "Automate Your Finances, Thalaiva!",
+];
+
 export default function RecurringClient({ initialRecurring, categories }: RecurringClientProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedRecurring, setSelectedRecurring] = useState<Recurring | null>(null);
+  const [title, setTitle] = useState(recurringTitles[0]);
+
+  useEffect(() => {
+    setTitle(recurringTitles[Math.floor(Math.random() * recurringTitles.length)]);
+  }, []);
 
   const handleEdit = (recurring: Recurring) => {
     setSelectedRecurring(recurring);
@@ -37,8 +49,8 @@ export default function RecurringClient({ initialRecurring, categories }: Recurr
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-            <h1 className="text-3xl font-bold font-headline">Recurring Transactions</h1>
-            <p className="text-muted-foreground">"Varavu ettana selavu pathana?" Track your regular income and expenses.</p>
+            <h1 className="text-2xl font-bold font-headline">{title}</h1>
+            <p className="text-muted-foreground">Track your regular income and expenses.</p>
         </div>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>

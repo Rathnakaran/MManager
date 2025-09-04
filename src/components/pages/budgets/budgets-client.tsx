@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Budget, Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Pencil } from 'lucide-react';
@@ -26,10 +26,22 @@ interface BudgetsClientProps {
   initialTransactions: Transaction[];
 }
 
+const budgetTitles = [
+    "The Budgeting Battlefield",
+    "Plan Your Selavu, Thalaiva!",
+    "Kaasu... Panam... Dhuttu... Money!",
+    "Budget Podu, Life-a Maathu!",
+];
+
 export default function BudgetsClient({ initialBudgets, initialTransactions }: BudgetsClientProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [title, setTitle] = useState(budgetTitles[0]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setTitle(budgetTitles[Math.floor(Math.random() * budgetTitles.length)]);
+  }, []);
 
   const handleEdit = (budget: Budget) => {
     setSelectedBudget(budget);
@@ -71,7 +83,6 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
         .filter(t => t.type === 'expense' && t.category === budget.category)
         .reduce((sum, t) => sum + t.amount, 0);
       const remaining = budget.amount - spent;
-      const progress = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
       
       let status: 'On Track' | 'Overspent' | 'N/A' = 'On Track';
       if (budget.amount === 0) {
@@ -92,7 +103,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold font-headline">The Budgeting Battlefield</h1>
+        <h1 className="text-2xl font-bold font-headline">{title}</h1>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button onClick={handleAddNew} className="bg-yellow-400 text-black hover:bg-yellow-500">
@@ -114,7 +125,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
 
       <Card>
         <CardHeader>
-            <CardTitle>Plan Your Selavu</CardTitle>
+            <CardTitle>Your Budget Breakdown</CardTitle>
             <CardDescription>Don't let your money just 'go with the flow'. Give it a plan!</CardDescription>
         </CardHeader>
         <CardContent>
