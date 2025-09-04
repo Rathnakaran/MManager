@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { addBudget, deleteBudget, updateBudget, getBudgets, getTransactions } from '@/lib/actions';
+import { addBudget, deleteBudget, updateBudget } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getIconByName } from '@/components/icons';
 import {
@@ -73,9 +73,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
     startTransition(async () => {
       try {
         await deleteBudget(id);
-        const [updatedBudgets, updatedTransactions] = await Promise.all([getBudgets(), getTransactions()]);
-        setBudgets(updatedBudgets);
-        setTransactions(updatedTransactions);
+        setBudgets(prev => prev.filter(b => b.id !== id));
         toast({
           title: 'Success',
           description: 'Budget category deleted successfully.',
@@ -94,17 +92,14 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
     startTransition(async () => {
       try {
         if (id) {
-          await updateBudget(id, values);
+          const updatedBudget = await updateBudget(id, values);
+          setBudgets(prev => prev.map(b => b.id === id ? updatedBudget : b));
           toast({ title: 'Success', description: 'Budget updated successfully.' });
         } else {
-          await addBudget(values);
+          const newBudget = await addBudget(values);
+          setBudgets(prev => [newBudget, ...prev]);
           toast({ title: 'Success', description: 'Budget added successfully.' });
         }
-        
-        const [updatedBudgets, updatedTransactions] = await Promise.all([getBudgets(), getTransactions()]);
-        setBudgets(updatedBudgets);
-        setTransactions(updatedTransactions);
-        
         handleSheetClose();
       } catch (error) {
         toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });

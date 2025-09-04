@@ -51,8 +51,8 @@ export async function getBudgetCategories(): Promise<string[]> {
 }
 
 // --- Transaction Actions ---
-export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
-  await addDoc(collection(db, 'transactions'), transactionData);
+export async function addTransaction(transactionData: Omit<Transaction, 'id'>): Promise<Transaction> {
+  const newDocRef = await addDoc(collection(db, 'transactions'), transactionData);
   
   // Check if the transaction category is a goal contribution
   const goals = await getGoals();
@@ -68,14 +68,20 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>) {
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
   revalidatePath('/goals');
+
+  const newTransaction = { id: newDocRef.id, ...transactionData };
+  return newTransaction;
 }
 
-export async function updateTransaction(id: string, transactionData: Partial<Transaction>) {
+export async function updateTransaction(id: string, transactionData: Partial<Omit<Transaction, 'id'>>): Promise<Transaction> {
   const transactionRef = doc(db, 'transactions', id);
   await updateDoc(transactionRef, transactionData);
   revalidatePath('/transactions');
   revalidatePath('/dashboard');
   revalidatePath('/goals');
+  
+  const updatedDoc = await getDoc(transactionRef);
+  return { id: updatedDoc.id, ...updatedDoc.data() } as Transaction;
 }
 
 export async function deleteTransaction(id: string) {
@@ -88,17 +94,21 @@ export async function deleteTransaction(id: string) {
 
 
 // --- Budget Actions ---
-export async function addBudget(budgetData: Omit<Budget, 'id'>) {
-    await addDoc(collection(db, 'budgets'), budgetData);
+export async function addBudget(budgetData: Omit<Budget, 'id'>): Promise<Budget> {
+    const newDocRef = await addDoc(collection(db, 'budgets'), budgetData);
     revalidatePath('/budgets');
     revalidatePath('/dashboard');
+    const newBudget = { id: newDocRef.id, ...budgetData };
+    return newBudget;
 }
 
-export async function updateBudget(id: string, budgetData: Partial<Budget>) {
+export async function updateBudget(id: string, budgetData: Partial<Omit<Budget, 'id'>>): Promise<Budget> {
     const budgetRef = doc(db, 'budgets', id);
     await updateDoc(budgetRef, budgetData);
     revalidatePath('/budgets');
     revalidatePath('/dashboard');
+    const updatedDoc = await getDoc(budgetRef);
+    return { id: updatedDoc.id, ...updatedDoc.data() } as Budget;
 }
 
 export async function deleteBudget(id: string) {

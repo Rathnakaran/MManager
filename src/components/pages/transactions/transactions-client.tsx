@@ -10,7 +10,7 @@ import { columns } from './columns';
 import TransactionForm from './transaction-form';
 import { FileDown, FileUp, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { importTransactions, addTransaction, updateTransaction, deleteTransaction, getTransactions } from '@/lib/actions';
+import { importTransactions, addTransaction, updateTransaction, deleteTransaction } from '@/lib/actions';
 import Papa from 'papaparse';
 
 
@@ -59,8 +59,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
     startTransition(async () => {
         try {
             await deleteTransaction(id);
-            const updatedTransactions = await getTransactions();
-            setTransactions(updatedTransactions);
+            setTransactions(prev => prev.filter(t => t.id !== id));
             toast({
                 title: 'Success',
                 description: 'Transaction deleted successfully.',
@@ -79,16 +78,14 @@ export default function TransactionsClient({ initialTransactions, categories }: 
     startTransition(async () => {
       try {
         if (id) {
-          await updateTransaction(id, transactionData);
+          const updatedTransaction = await updateTransaction(id, transactionData);
+          setTransactions(prev => prev.map(t => t.id === id ? updatedTransaction : t));
           toast({ title: 'Success', description: 'Transaction updated successfully.' });
         } else {
-          await addTransaction(transactionData);
+          const newTransaction = await addTransaction(transactionData);
+          setTransactions(prev => [newTransaction, ...prev]);
           toast({ title: 'Success', description: 'Transaction added successfully.' });
         }
-        
-        const updatedTransactions = await getTransactions();
-        setTransactions(updatedTransactions);
-
         handleSheetClose();
       } catch (error) {
         console.error("Form submission error:", error);
@@ -107,11 +104,11 @@ export default function TransactionsClient({ initialTransactions, categories }: 
                 complete: async (results) => {
                   try {
                     await importTransactions(results.data);
-                    const updatedTransactions = await getTransactions();
-                    setTransactions(updatedTransactions);
+                    // This will need a page refresh for imported data to show.
+                    // A more advanced implementation could re-fetch or merge.
                     toast({
                       title: "Import Successful",
-                      description: `${results.data.length} transactions have been imported.`,
+                      description: `${results.data.length} transactions have been imported. Please refresh to see them.`,
                     });
                   } catch (error) {
                     toast({
