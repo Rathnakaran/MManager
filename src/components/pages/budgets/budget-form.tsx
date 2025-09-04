@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { addBudget, updateBudget } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { Budget } from '@/types';
 import { useState, useTransition } from 'react';
@@ -33,9 +32,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface BudgetFormProps {
   budget?: Budget | null;
   onFinished: () => void;
+  onFormSubmit: (values: FormValues, id?: string) => Promise<void>;
 }
 
-export default function BudgetForm({ budget, onFinished }: BudgetFormProps) {
+export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -51,19 +51,8 @@ export default function BudgetForm({ budget, onFinished }: BudgetFormProps) {
 
   const onSubmit = (values: FormValues) => {
     startTransition(async () => {
-      try {
-        if (budget) {
-          await updateBudget(budget.id, values);
-          toast({ title: 'Success', description: 'Budget updated successfully.' });
-        } else {
-          await addBudget(values);
-          toast({ title: 'Success', description: 'Budget added successfully.' });
-        }
-        onFinished();
-        form.reset();
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-      }
+      await onFormSubmit(values, budget?.id);
+      form.reset();
     });
   };
 
@@ -142,7 +131,7 @@ export default function BudgetForm({ budget, onFinished }: BudgetFormProps) {
         
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onFinished}>Cancel</Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || isSuggesting}>
               {isPending ? 'Saving...' : (budget ? 'Save Changes' : 'Add Budget')}
             </Button>
         </div>

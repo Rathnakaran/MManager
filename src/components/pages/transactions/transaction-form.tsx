@@ -28,7 +28,6 @@ import { CalendarIcon, Lightbulb } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { addTransaction, updateTransaction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { Transaction } from '@/types';
 import { useState, useTransition } from 'react';
@@ -48,9 +47,10 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
   categories: { budgetCategories: string[], goalCategories: string[] };
   onFinished: () => void;
+  onFormSubmit: (values: FormValues, id?: string) => Promise<void>;
 }
 
-export default function TransactionForm({ transaction, categories, onFinished }: TransactionFormProps) {
+export default function TransactionForm({ transaction, categories, onFinished, onFormSubmit }: TransactionFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -68,22 +68,14 @@ export default function TransactionForm({ transaction, categories, onFinished }:
 
   const onSubmit = (values: FormValues) => {
     startTransition(async () => {
-      try {
-        const transactionData = {
-          ...values,
-          date: values.date.toISOString().split('T')[0],
-        };
-        if (transaction) {
-          await updateTransaction(transaction.id, transactionData);
-          toast({ title: 'Success', description: 'Transaction updated successfully.' });
-        } else {
-          await addTransaction(transactionData);
-          toast({ title: 'Success', description: 'Transaction added successfully.' });
-        }
-        onFinished();
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-      }
+        await onFormSubmit(values, transaction?.id);
+        form.reset({
+            description: '',
+            amount: 0,
+            date: new Date(),
+            type: 'expense',
+            category: ''
+        });
     });
   };
 
@@ -231,7 +223,7 @@ export default function TransactionForm({ transaction, categories, onFinished }:
                                 <SelectItem value="Other">Other</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button type="button" variant="outline" size="icon" onClick={handleSuggestCategory} disabled={isSuggesting}>
+                        <Button type="button" variant="outline" size="icon" onClick={handleSuggestCategory} disabled={isSuggesting || isPending}>
                             <Lightbulb className={cn("h-4 w-4", isSuggesting && "animate-pulse")} />
                         </Button>
                     </div>
@@ -242,7 +234,7 @@ export default function TransactionForm({ transaction, categories, onFinished }:
         
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onFinished}>Cancel</Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || isSuggesting}>
               {isPending ? 'Saving...' : (transaction ? 'Save Changes' : 'Add Transaction')}
             </Button>
         </div>

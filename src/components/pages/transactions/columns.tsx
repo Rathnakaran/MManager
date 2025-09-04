@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Transaction } from '@/types';
@@ -11,26 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal } from 'lucide-react';
-import { deleteTransaction } from '@/lib/actions';
-import { toast } from '@/hooks/use-toast';
-
-const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
-    try {
-      await deleteTransaction(id);
-      toast({
-        title: 'Success',
-        description: 'Transaction deleted successfully.',
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete transaction.',
-      });
-    }
-  };
-
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
@@ -43,7 +24,7 @@ const formatDate = (dateString: string) =>
     timeZone: 'UTC' // To prevent off-by-one day errors
   });
 
-export const columns = (onEdit: (transaction: Transaction) => void): ColumnDef<Transaction>[] => [
+export const columns = (onEdit: (transaction: Transaction) => void, onDelete: (id: string) => void): ColumnDef<Transaction>[] => [
   {
     accessorKey: 'date',
     header: 'Date',
@@ -95,7 +76,7 @@ export const columns = (onEdit: (transaction: Transaction) => void): ColumnDef<T
                 </DropdownMenuItem>
                 <DropdownMenuItem
                     className="text-destructive"
-                    onClick={() => handleDelete(transaction.id)}
+                    onClick={() => onDelete(transaction.id)}
                     >
                     Delete
                 </DropdownMenuItem>

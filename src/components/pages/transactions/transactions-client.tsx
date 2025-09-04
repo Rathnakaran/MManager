@@ -10,7 +10,7 @@ import { columns } from './columns';
 import TransactionForm from './transaction-form';
 import { FileDown, FileUp, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { importTransactions } from '@/lib/actions';
+import { importTransactions, addTransaction, updateTransaction, deleteTransaction } from '@/lib/actions';
 import Papa from 'papaparse';
 
 
@@ -27,6 +27,7 @@ const transactionTitles = [
 ];
 
 export default function TransactionsClient({ initialTransactions, categories }: TransactionsClientProps) {
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [title, setTitle] = useState(transactionTitles[0]);
@@ -51,6 +52,58 @@ export default function TransactionsClient({ initialTransactions, categories }: 
       setSelectedTransaction(null);
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this transaction?')) return;
+    const originalTransactions = transactions;
+    setTransactions(prev => prev.filter(t => t.id !== id));
+    try {
+      await deleteTransaction(id);
+      toast({
+        title: 'Success',
+        description: 'Transaction deleted successfully.',
+      });
+    } catch (error) {
+      setTransactions(originalTransactions);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete transaction.',
+      });
+    }
+  };
+
+  const onFormSubmit = async (values: Omit<Transaction, 'id' | 'date'> & {date: Date}, id?: string) => {
+    const transactionData = {
+        ...values,
+        date: values.date.toISOString().split('T')[0],
+    };
+
+    if (id) { // Update
+        const originalTransactions = transactions;
+        setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...transactionData} : t));
+        try {
+            await updateTransaction(id, transactionData);
+            toast({ title: 'Success', description: 'Transaction updated successfully.' });
+        } catch (error) {
+            setTransactions(originalTransactions);
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
+    } else { // Add
+        const tempId = `temp-${Date.now()}`;
+        const newTransaction: Transaction = { ...transactionData, id: tempId };
+        setTransactions(prev => [newTransaction, ...prev]);
+        try {
+            const { transaction: savedTransaction } = await addTransaction(transactionData);
+            setTransactions(prev => prev.map(t => t.id === tempId ? savedTransaction : t));
+            toast({ title: 'Success', description: 'Transaction added successfully.' });
+        } catch (error) {
+            setTransactions(prev => prev.filter(t => t.id !== tempId));
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
+    }
+    handleSheetClose();
+  }
+
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -60,7 +113,9 @@ export default function TransactionsClient({ initialTransactions, categories }: 
         complete: async (results) => {
           try {
             // @ts-ignore
-            const { count } = await importTransactions(results.data);
+            const { count, newTransactions } = await importTransactions(results.data);
+            // @ts-ignore
+            setTransactions(prev => [...newTransactions, ...prev]);
             toast({
               title: "Import Successful",
               description: `${count} transactions have been imported.`,
@@ -78,7 +133,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
   };
 
   const handleExport = () => {
-    const csv = Papa.unparse(initialTransactions);
+    const csv = Papa.unparse(transactions);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -123,12 +178,13 @@ export default function TransactionsClient({ initialTransactions, categories }: 
                         transaction={selectedTransaction} 
                         categories={categories}
                         onFinished={handleSheetClose}
+                        onFormSubmit={onFormSubmit}
                     />
                 </SheetContent>
             </Sheet>
         </div>
       </div>
-      <DataTable columns={columns(handleEdit)} data={initialTransactions} />
+      <DataTable columns={columns(handleEdit, handleDelete)} data={transactions} />
     </div>
   );
 }

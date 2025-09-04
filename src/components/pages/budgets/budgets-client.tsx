@@ -4,10 +4,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Budget, Transaction } from '@/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
+import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { deleteBudget } from '@/lib/actions';
+import { addBudget, deleteBudget, updateBudget } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getIconByName } from '@/components/icons';
 import {
@@ -19,6 +19,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import BudgetForm from './budget-form';
 
 interface BudgetsClientProps {
@@ -34,6 +40,8 @@ const budgetTitles = [
 ];
 
 export default function BudgetsClient({ initialBudgets, initialTransactions }: BudgetsClientProps) {
+  const [budgets, setBudgets] = useState(initialBudgets);
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [title, setTitle] = useState(budgetTitles[0]);
@@ -61,12 +69,14 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this budget category?')) return;
     try {
+      setBudgets(prev => prev.filter(b => b.id !== id));
       await deleteBudget(id);
       toast({
         title: 'Success',
         description: 'Budget category deleted successfully.',
       });
     } catch (error) {
+      setBudgets(initialBudgets); // Revert on error
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -74,12 +84,39 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
       });
     }
   };
+
+  const onFormSubmit = async (values: Omit<Budget, 'id'>, id?: string) => {
+     if (id) { // Update
+        const originalBudgets = budgets;
+        setBudgets(prev => prev.map(b => b.id === id ? { ...b, ...values} : b));
+        try {
+            await updateBudget(id, values);
+            toast({ title: 'Success', description: 'Budget updated successfully.' });
+        } catch (error) {
+            setBudgets(originalBudgets);
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
+    } else { // Add
+        const tempId = `temp-${Date.now()}`;
+        const newBudget: Budget = { ...values, id: tempId };
+        setBudgets(prev => [...prev, newBudget]);
+        try {
+            const { budget: savedBudget } = await addBudget(values);
+            setBudgets(prev => prev.map(b => b.id === tempId ? savedBudget : b));
+            toast({ title: 'Success', description: 'Budget added successfully.' });
+        } catch (error) {
+            setBudgets(prev => prev.filter(b => b.id !== tempId));
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
+    }
+    handleSheetClose();
+  };
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
   const budgetData = useMemo(() => {
-    return initialBudgets.map(budget => {
-      const spent = initialTransactions
+    return budgets.map(budget => {
+      const spent = transactions
         .filter(t => t.type === 'expense' && t.category === budget.category)
         .reduce((sum, t) => sum + t.amount, 0);
       const remaining = budget.amount - spent;
@@ -103,7 +140,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
         badgeClass
       }
     })
-  }, [initialBudgets, initialTransactions]);
+  }, [budgets, transactions]);
 
   return (
     <div className="space-y-6">
@@ -123,6 +160,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
             <BudgetForm
               budget={selectedBudget}
               onFinished={handleSheetClose}
+              onFormSubmit={onFormSubmit}
             />
           </SheetContent>
         </Sheet>
@@ -142,7 +180,7 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
                         <TableHead className="text-right">Spent</TableHead>
                         <TableHead className="text-right">Remaining</TableHead>
                         <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-center">Actions</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -166,15 +204,26 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
                                         {budget.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>
-                                    <div className="flex items-center justify-center gap-1">
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(budget)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(budget.id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Open menu</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => handleEdit(budget)}>
+                                                Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                            className="text-destructive"
+                                            onClick={() => handleDelete(budget.id)}
+                                            >
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </TableCell>
                             </TableRow>
                         )

@@ -19,7 +19,6 @@ import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { addGoal, updateGoal } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { Goal } from '@/types';
 import { useTransition } from 'react';
@@ -40,10 +39,10 @@ type FormValues = z.infer<typeof formSchema>;
 interface GoalFormProps {
   goal?: Goal | null;
   onFinished: () => void;
+  onFormSubmit: (values: FormValues, id?: string) => Promise<void>;
 }
 
-export default function GoalForm({ goal, onFinished }: GoalFormProps) {
-  const { toast } = useToast();
+export default function GoalForm({ goal, onFinished, onFormSubmit }: GoalFormProps) {
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -58,23 +57,8 @@ export default function GoalForm({ goal, onFinished }: GoalFormProps) {
 
   const onSubmit = (values: FormValues) => {
     startTransition(async () => {
-      try {
-        const goalData = {
-          ...values,
-          targetDate: values.targetDate.toISOString().split('T')[0],
-        };
-        if (goal) {
-          await updateGoal(goal.id, goalData);
-          toast({ title: 'Success', description: 'Goal updated successfully. "Vaathi Coming!"' });
-        } else {
-          await addGoal(goalData);
-          toast({ title: 'Success', description: 'Goal added successfully. "It\'s a brand!"' });
-        }
-        onFinished();
+        await onFormSubmit(values, goal?.id);
         form.reset();
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-      }
     });
   };
 
@@ -128,7 +112,7 @@ export default function GoalForm({ goal, onFinished }: GoalFormProps) {
           name="targetDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Target Date</FormLabel>
+              <FormLabel>Target Date</_FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>

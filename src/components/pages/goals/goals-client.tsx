@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Target } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { deleteGoal } from '@/lib/actions';
+import { addGoal, deleteGoal, updateGoal } from '@/lib/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
@@ -25,6 +25,7 @@ const goalTitles = [
 ];
 
 export default function GoalsClient({ initialGoals }: GoalsClientProps) {
+  const [goals, setGoals] = useState(initialGoals);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [title, setTitle] = useState(goalTitles[0]);
@@ -51,6 +52,8 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this goal?')) return;
+    const originalGoals = goals;
+    setGoals(prev => prev.filter(g => g.id !== id));
     try {
       await deleteGoal(id);
       toast({
@@ -58,6 +61,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
         description: 'Goal deleted. "Mind voice: Annan innoru thadava koopdapattar!"',
       });
     } catch (error) {
+      setGoals(originalGoals);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -65,6 +69,38 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
       });
     }
   };
+
+  const onFormSubmit = async (values: Omit<Goal, 'id' | 'targetDate'> & {targetDate: Date}, id?: string) => {
+    const goalData = {
+        ...values,
+        targetDate: values.targetDate.toISOString().split('T')[0],
+    };
+
+    if (id) {
+        const originalGoals = goals;
+        setGoals(prev => prev.map(g => g.id === id ? { ...g, ...goalData } : g));
+        try {
+            await updateGoal(id, goalData);
+            toast({ title: 'Success', description: 'Goal updated successfully. "Vaathi Coming!"' });
+        } catch (error) {
+            setGoals(originalGoals);
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
+    } else {
+        const tempId = `temp-${Date.now()}`;
+        const newGoal: Goal = { ...goalData, id: tempId };
+        setGoals(prev => [...prev, newGoal]);
+        try {
+            const { goal: savedGoal } = await addGoal(goalData);
+            setGoals(prev => prev.map(g => g.id === tempId ? savedGoal : g));
+            toast({ title: 'Success', description: 'Goal added successfully. "It\'s a brand!"' });
+        } catch (error) {
+            setGoals(prev => prev.filter(g => g.id !== tempId));
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
+    }
+    handleSheetClose();
+  }
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -88,11 +124,12 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
             <GoalForm
               goal={selectedGoal}
               onFinished={handleSheetClose}
+              onFormSubmit={onFormSubmit}
             />
           </SheetContent>
         </Sheet>
       </div>
-        {initialGoals.length === 0 ? (
+        {goals.length === 0 ? (
             <Card className="text-center py-12">
                 <CardHeader>
                     <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
@@ -104,7 +141,7 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
             </Card>
         ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {initialGoals.map((goal) => {
+                {goals.map((goal) => {
                 const progress = (goal.currentAmount / goal.targetAmount) * 100;
                 return (
                     <Card key={goal.id}>
