@@ -54,8 +54,8 @@ export default function DashboardClient({
     }, {} as Record<string, number>);
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-4xl font-bold font-headline">{welcomeMessage}</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold font-headline">{welcomeMessage}</h1>
 
       <StatCards
         totalSpent={totalSpent}
@@ -71,7 +71,7 @@ export default function DashboardClient({
 
       <GoalProgress goals={goals} />
       
-      <div className="grid gap-8 lg:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <ExpenseChart data={expenseBreakdown} />
         </div>

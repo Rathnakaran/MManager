@@ -28,7 +28,7 @@ export function StatCards({ totalSpent, remainingBudget, totalBudget }: StatCard
                     <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-3xl font-bold">{formatCurrency(totalSpent)}</div>
+                    <div className="text-2xl font-bold">{formatCurrency(totalSpent)}</div>
                     <p className="text-xs text-muted-foreground">for October 2023</p>
                 </CardContent>
             </Card>
@@ -38,7 +38,7 @@ export function StatCards({ totalSpent, remainingBudget, totalBudget }: StatCard
                     <PiggyBank className="h-5 w-5 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className={`text-3xl font-bold`}>{formatCurrency(remainingBudget)}</div>
+                    <div className={`text-2xl font-bold`}>{formatCurrency(remainingBudget)}</div>
                     <p className="text-xs text-muted-foreground">of {formatCurrency(totalBudget)} total budget</p>
                 </CardContent>
             </Card>

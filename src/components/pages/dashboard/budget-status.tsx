@@ -40,18 +40,19 @@ export function BudgetStatus({ transactions, budgets }: BudgetStatusProps) {
         <ScrollArea className="h-[300px] pr-4">
           <div className="space-y-4">
             {budgetWithSpending.map(item => {
+              const Icon = getIconByName(item.icon);
               return (
                 <div key={item.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-1.5 bg-green-500/10 rounded-full border-2 border-green-500/20">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <div className="p-2 bg-muted rounded-full">
+                      <Icon className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="font-medium">{item.category}</p>
-                      <p className="text-xs text-muted-foreground">Spent {formatCurrency(item.spent)} of {formatCurrency(item.amount)}</p>
+                      <p className="text-xs text-muted-foreground">Spent {formatCurrency(item.spent)}</p>
                     </div>
                   </div>
-                  <div className={`font-semibold ${item.remaining >= 0 ? 'text-green-500' : 'text-destructive'}`}>
+                  <div className={`font-semibold ${item.remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
                     {formatCurrency(item.remaining)}
                   </div>
                 </div>
@@ -63,4 +64,3 @@ export function BudgetStatus({ transactions, budgets }: BudgetStatusProps) {
     </Card>
   );
 }
-
