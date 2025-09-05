@@ -17,7 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { getData, getUserIdFromCookie } from '@/lib/actions';
 import AppLoader from '@/components/layout/app-loader';
-import PowerBiReport from './power-bi-report';
+import { ExpenseChart } from './expense-chart';
 
 interface DashboardClientProps {}
 
@@ -46,35 +46,36 @@ export default function DashboardClient({}: DashboardClientProps) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-        const userId = await getUserIdFromCookie();
-        if (!userId) {
-            setIsLoading(false); // Stop loading if no user
-            return;
-        };
+  const fetchData = async () => {
+      const userId = await getUserIdFromCookie();
+      if (!userId) {
+          setIsLoading(false); // Stop loading if no user
+          return;
+      };
 
-        setIsLoading(true);
-        getData(userId)
-        .then(({ transactions, budgets, goals, recurringTransactions }) => {
-            setTransactions(transactions);
-            setBudgets(budgets);
-            setGoals(goals);
-            setRecurringTransactions(recurringTransactions);
-        })
-        .catch(() => {
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to load dashboard data.' });
-        })
-        .finally(() => {
-            setIsLoading(false);
-        });
-    }
-    
+      setIsLoading(true);
+      getData(userId)
+      .then(({ transactions, budgets, goals, recurringTransactions }) => {
+          setTransactions(transactions);
+          setBudgets(budgets);
+          setGoals(goals);
+          setRecurringTransactions(recurringTransactions);
+      })
+      .catch(() => {
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to load dashboard data.' });
+      })
+      .finally(() => {
+          setIsLoading(false);
+      });
+  }
+
+  useEffect(() => {
     fetchData();
     // This runs only on the client, after the initial render, to avoid hydration mismatch
     const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
     setWelcomeMessage(welcomeMessages[randomIndex]);
-  }, [toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
@@ -137,6 +138,18 @@ export default function DashboardClient({}: DashboardClientProps) {
     return { totalBudget: totalBudgetAmount, remainingBudget: remaining };
   }, [budgets, totalSpent, view]);
   
+  const expenseBreakdown = useMemo(() => {
+    const breakdown: Record<string, number> = {};
+    filteredTransactions
+      .filter(t => t.type === 'expense')
+      .forEach(t => {
+        if (!breakdown[t.category]) {
+          breakdown[t.category] = 0;
+        }
+        breakdown[t.category] += t.amount;
+      });
+    return breakdown;
+  }, [filteredTransactions]);
 
   const formatMonth = (monthStr: string) => {
     const [year, month] = monthStr.split('-');
@@ -188,7 +201,7 @@ export default function DashboardClient({}: DashboardClientProps) {
         <BudgetStatus transactions={filteredTransactions} budgets={budgets} view={view} />
       </div>
 
-      <PowerBiReport />
+      <ExpenseChart expenseBreakdown={expenseBreakdown} />
     </div>
   );
 }
