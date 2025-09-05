@@ -118,6 +118,32 @@ export default function DashboardClient({}: DashboardClientProps) {
     const remainingBudget = totalBudget - totalSpent;
     return { totalBudget, remainingBudget };
   }, [budgets, totalSpent, view]);
+  
+  const advisorData = useMemo(() => {
+    const monthlyTotalSpent = transactions
+      .filter(t => t.type === 'expense' && t.date.startsWith(getCurrentMonthValue()))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const monthlyTotalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
+    const monthlyRemainingBudget = monthlyTotalBudget - monthlyTotalSpent;
+    
+    const monthlyExpenseBreakdown: Record<string, number> = {};
+    transactions
+      .filter(t => t.type === 'expense' && t.date.startsWith(getCurrentMonthValue()))
+      .forEach(t => {
+          if (!monthlyExpenseBreakdown[t.category]) {
+              monthlyExpenseBreakdown[t.category] = 0;
+          }
+          monthlyExpenseBreakdown[t.category] += t.amount;
+      });
+
+    return {
+      totalSpent: monthlyTotalSpent,
+      remainingBudget: monthlyRemainingBudget,
+      expenseBreakdown: monthlyExpenseBreakdown
+    };
+  }, [transactions, budgets]);
+
 
   const formatMonth = (monthStr: string) => {
     const [year, month] = monthStr.split('-');
@@ -159,9 +185,9 @@ export default function DashboardClient({}: DashboardClientProps) {
       />
       
       <AiAdvisor
-        totalSpent={totalSpent}
-        remainingBudget={remainingBudget}
-        expenseBreakdown={expenseBreakdown}
+        totalSpent={advisorData.totalSpent}
+        remainingBudget={advisorData.remainingBudget}
+        expenseBreakdown={advisorData.expenseBreakdown}
       />
 
       <GoalProgress goals={goals} />

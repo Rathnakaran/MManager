@@ -27,22 +27,25 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
   const [isPending, startTransition] = useTransition();
 
   const fetchAdvice = () => {
-    startTransition(async () => {
-      try {
+    // Only fetch if we haven't fetched before, or if it's a manual refresh.
+    if (!advice || !isLoading) {
+      startTransition(async () => {
         setIsLoading(true);
-        const result = await getFinancialAdvice({
-          totalSpent,
-          remainingBudget,
-          expenseBreakdown,
-        });
-        setAdvice(result);
-      } catch (error) {
-        console.error('Failed to get financial advice:', error);
-        setAdvice({ summary: 'Could not load financial advice at this time.' });
-      } finally {
-        setIsLoading(false);
-      }
-    });
+        try {
+          const result = await getFinancialAdvice({
+            totalSpent,
+            remainingBudget,
+            expenseBreakdown,
+          });
+          setAdvice(result);
+        } catch (error) {
+          console.error('Failed to get financial advice:', error);
+          setAdvice({ summary: 'Could not load financial advice. You may have hit the free tier limit.' });
+        } finally {
+          setIsLoading(false);
+        }
+      });
+    }
   }
 
   useEffect(() => {
