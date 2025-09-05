@@ -18,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import TransactionForm from '../transactions/transaction-form';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface CalendarViewProps {
   transactions: Transaction[];
@@ -146,16 +147,24 @@ export default function CalendarView({ transactions, onDataChange }: CalendarVie
             />
         </SheetContent>
       </Sheet>
-
-      <Calendar
-        mode="single"
-        selected={date}
-        onSelect={setDate}
-        className="rounded-md border"
-        components={{
-          Day: DayWithDetails
-        }}
-      />
+      <Card>
+        <CardContent className="p-0 sm:p-4">
+            <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="p-0 sm:p-3"
+                classNames={{
+                    root: 'w-full',
+                    table: 'w-full',
+                    row: 'w-full flex-1',
+                }}
+                components={{
+                Day: DayWithDetails
+                }}
+            />
+        </CardContent>
+      </Card>
     </>
   );
 }
