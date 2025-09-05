@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
   transactions: Transaction[];
@@ -29,16 +30,26 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
-  const DayWithDetails = (day: Date) => {
-    const dateStr = format(day, 'yyyy-MM-dd');
+  const getSpendingLevelClass = (amount: number) => {
+    if (amount === 0) return '';
+    if (amount < 1000) return 'bg-green-500/10 hover:bg-green-500/20'; // Low spending
+    if (amount < 5000) return 'bg-yellow-500/10 hover:bg-yellow-500/20'; // Medium spending
+    return 'bg-red-500/20 hover:bg-red-500/30'; // High spending
+  };
+
+  const DayWithDetails = ({ date, displayMonth }: { date: Date, displayMonth: Date }) => {
+    const isOutside = date.getMonth() !== displayMonth.getMonth();
+    const dateStr = format(date, 'yyyy-MM-dd');
     const dayTransactions = transactionsByDay[dateStr] || [];
     const dailyTotal = dayTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
+    const spendingClass = getSpendingLevelClass(dailyTotal);
+
     const cellContent = (
-      <div className="relative flex flex-col items-center justify-center h-full w-full">
-        <span>{format(day, 'd')}</span>
+      <div className={cn("relative flex flex-col items-center justify-center h-full w-full rounded-md", !isOutside && spendingClass)}>
+        <span>{format(date, 'd')}</span>
         {dailyTotal > 0 && (
           <Badge variant="destructive" className="absolute bottom-1 text-xs px-1 h-4">
             {formatCurrency(dailyTotal)}
@@ -47,18 +58,18 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
       </div>
     );
 
-    if (dayTransactions.length === 0) {
-      return cellContent;
+    if (dayTransactions.length === 0 || isOutside) {
+      return <div className="h-full w-full p-1">{cellContent}</div>;
     }
     
     return (
       <Popover>
         <PopoverTrigger asChild>
-          <div className="h-full w-full cursor-pointer">{cellContent}</div>
+          <div className="h-full w-full cursor-pointer p-1">{cellContent}</div>
         </PopoverTrigger>
         <PopoverContent className="w-80">
           <div className="space-y-4">
-            <h4 className="font-medium leading-none">{format(day, 'PPP')}</h4>
+            <h4 className="font-medium leading-none">{format(date, 'PPP')}</h4>
             <ScrollArea className="h-48">
               <div className="space-y-2 pr-4">
                 {dayTransactions.map(t => (
@@ -91,13 +102,13 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
         head_cell:"w-full text-muted-foreground rounded-md font-normal text-[0.8rem]",
         row: "flex w-full mt-2 justify-around",
         cell: "h-20 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: "h-full w-full p-1",
+        day: "h-full w-full p-0", // Changed padding to 0
         day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
         day_outside: "text-muted-foreground opacity-50",
       }}
       components={{
-        Day: (props) => DayWithDetails(props.date)
+        Day: DayWithDetails
       }}
     />
   );
