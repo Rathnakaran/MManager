@@ -328,7 +328,7 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-4">
                                 <Avatar>
                                     <AvatarImage src={user.photoURL || undefined} alt={user.name} />
-                                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                                    <AvatarFallback>{(user.name || user.username || 'U').charAt(0).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <div className="font-semibold flex items-center gap-2">
