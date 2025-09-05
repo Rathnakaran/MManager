@@ -51,7 +51,7 @@ export async function createUser(userData: Omit<User, 'id'> & {dateOfBirth: Date
 
     const userDataWithDateString = {
         ...userData,
-        dateOfBirth: toDateString(userData.dateOfBirth),
+        dateOfBirth: format(userData.dateOfBirth, 'yyyy-MM-dd'),
     }
     
     const newDocRef = await addDoc(usersCollection, userDataWithDateString);
@@ -359,3 +359,5 @@ export async function seedInitialData(userId: string) {
   // This function is now empty to ensure new users start with a clean slate.
   console.log(`New user created with ID: ${userId}. No sample data seeded.`);
 }
+
+    

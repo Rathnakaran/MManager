@@ -182,11 +182,7 @@ export default function SettingsPage() {
   const onCreateUserSubmit = (values: CreateUserFormValues) => {
     startTransition(async () => {
       try {
-        const userData = {
-            ...values,
-            dateOfBirth: format(values.dateOfBirth, 'yyyy-MM-dd'),
-        }
-        await createUser(userData);
+        await createUser(values);
         await fetchUsers(); // Re-fetch users to update the list
         toast({
           title: 'Success!',
@@ -433,5 +429,7 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
 
     
