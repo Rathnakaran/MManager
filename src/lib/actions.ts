@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore';
 import type { Transaction, Budget, Goal, RecurringTransaction, User } from '@/types';
 import { cookies } from 'next/headers';
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export async function getUserIdFromCookie() {
     const cookieStore = cookies();
@@ -32,12 +32,9 @@ const getGoalKeyword = (goalName: string) => {
 
 // A helper function to format dates to 'yyyy-MM-dd' in a way that avoids timezone issues.
 const toDateString = (date: Date): string => {
-    // To combat timezone issues, get the year, month, and day from the client's date,
-    // and then construct a new date string in YYYY-MM-DD format.
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // Force the date to be interpreted and formatted in a specific timezone to avoid UTC shifts.
+    // 'Asia/Kolkata' is used as a stable reference, but any valid timezone works.
+    return formatInTimeZone(date, 'Asia/Kolkata', 'yyyy-MM-dd');
 }
 
 // --- User Actions ---
@@ -103,10 +100,10 @@ export async function getUsers(): Promise<User[]> {
     });
 }
 
-export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth' | 'photoURL'>>) {
+export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth' | 'photoURL'>> & { dateOfBirth?: Date }) {
     const dataToUpdate: any = { ...userData };
-    if (userData.dateOfBirth && typeof userData.dateOfBirth !== 'string') {
-        dataToUpdate.dateOfBirth = toDateString(new Date(userData.dateOfBirth));
+    if (userData.dateOfBirth && userData.dateOfBirth instanceof Date) {
+        dataToUpdate.dateOfBirth = toDateString(userData.dateOfBirth);
     }
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, dataToUpdate);
@@ -253,16 +250,24 @@ export async function getGoalCategories(userId: string): Promise<string[]> {
     return goals.map(doc => getGoalKeyword(doc.name as string));
 }
 
-export async function addGoal(goalData: Omit<Goal, 'id'>): Promise<Goal> {
-  const newGoalRef = await addDoc(collection(db, 'goals'), goalData);
+export async function addGoal(goalData: Omit<Goal, 'id' | 'targetDate'> & {targetDate: Date}): Promise<Goal> {
+    const dataWithDateString = {
+        ...goalData,
+        targetDate: toDateString(goalData.targetDate),
+    };
+  const newGoalRef = await addDoc(collection(db, 'goals'), dataWithDateString);
   revalidatePath('/');
-  const newGoal = { id: newGoalRef.id, ...goalData };
+  const newGoal = { id: newGoalRef.id, ...dataWithDateString };
   return newGoal;
 }
 
-export async function updateGoal(id: string, goalData: Partial<Omit<Goal, 'id'>>): Promise<Goal> {
+export async function updateGoal(id: string, goalData: Partial<Omit<Goal, 'id' | 'targetDate'>> & {targetDate?: Date}): Promise<Goal> {
+    const dataToUpdate: any = { ...goalData };
+    if (goalData.targetDate) {
+        dataToUpdate.targetDate = toDateString(goalData.targetDate);
+    }
   const goalRef = doc(db, 'goals', id);
-  await updateDoc(goalRef, goalData);
+  await updateDoc(goalRef, dataToUpdate);
   revalidatePath('/');
   const updatedDoc = await getDoc(goalRef);
   return { id: updatedDoc.id, ...updatedDoc.data() } as Goal;
