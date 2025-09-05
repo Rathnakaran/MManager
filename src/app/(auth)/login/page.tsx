@@ -18,13 +18,23 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { getUserByUsername } from '@/lib/actions';
 import { useTransition, useState, useEffect } from 'react';
+import { Info } from 'lucide-react';
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -172,6 +182,28 @@ export default function LoginPage() {
           </form>
         </Form>
       </CardContent>
+      <CardFooter className='justify-center'>
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="link" className="text-xs text-muted-foreground"><Info className='mr-2 h-3 w-3'/> Creator Info</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>MManager Application</DialogTitle>
+                    <DialogDescription>
+                        This application was designed and developed by:
+                    </DialogDescription>
+                </DialogHeader>
+                <div className='space-y-2'>
+                    <p className='font-bold text-lg'>Rathnakaran M</p>
+                    <p className='text-sm text-muted-foreground'>rathnakaran480@gmail.com</p>
+                    <p className='text-xs italic pt-4'>
+                        "Creativity is intelligence having fun." - Albert Einstein
+                    </p>
+                </div>
+            </DialogContent>
+        </Dialog>
+      </CardFooter>
     </Card>
   );
 }

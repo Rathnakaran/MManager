@@ -100,7 +100,7 @@ export async function getUsers(): Promise<User[]> {
     });
 }
 
-export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth' | 'photoURL'>> & { dateOfBirth?: Date }) {
+export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth'>> & { dateOfBirth?: Date }) {
     const dataToUpdate: any = { ...userData };
     if (userData.dateOfBirth && userData.dateOfBirth instanceof Date) {
         dataToUpdate.dateOfBirth = toDateString(userData.dateOfBirth);

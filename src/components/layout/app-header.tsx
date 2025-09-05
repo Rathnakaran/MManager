@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import type { User } from '@/types';
 import { getUserById, getUserIdFromCookie } from '@/lib/actions';
+import { ChevronDown } from 'lucide-react';
 
 const deleteCookie = (name: string) => {
     document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
@@ -47,10 +48,6 @@ export default function AppHeader() {
     router.push('/login');
   };
   
-  const getInitials = (name: string = '') => {
-    return name.charAt(0).toUpperCase();
-  }
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
       <SidebarTrigger className="sm:hidden" />
@@ -60,14 +57,11 @@ export default function AppHeader() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
-            size="icon"
-            className="overflow-hidden rounded-full"
+            variant="ghost"
+            className="flex items-center gap-2"
           >
-            <Avatar>
-              <AvatarImage src={user?.photoURL || `https://picsum.photos/seed/${user?.id}/32/32`} alt={user?.name || 'User'} data-ai-hint="person face" />
-              <AvatarFallback>{user ? getInitials(user.name) : 'U'}</AvatarFallback>
-            </Avatar>
+            <span className="font-semibold">{user?.name || user?.username || 'Account'}</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
