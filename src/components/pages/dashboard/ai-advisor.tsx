@@ -36,9 +36,13 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
           expenseBreakdown,
         });
         setAdvice(result);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to get financial advice:', error);
-        setAdvice({ summary: 'Could not load financial advice. You may have hit the free tier limit.' });
+        if (error.message && error.message.includes('503 Service Unavailable')) {
+          setAdvice({ summary: 'The AI Advisor is currently busy. Please try again in a moment.' });
+        } else {
+          setAdvice({ summary: 'Could not load financial advice. You may have hit the daily free tier limit.' });
+        }
       } finally {
         setIsLoading(false);
       }
