@@ -62,7 +62,7 @@ export default function TransactionForm({ transaction, categories, onFinished, o
     defaultValues: {
       description: transaction?.description || '',
       amount: transaction?.amount || 0,
-      date: transaction?.date ? new Date(transaction.date) : new Date(),
+      date: transaction?.date ? new Date(transaction.date + 'T00:00:00') : new Date(),
       type: transaction?.type || 'expense',
       category: transaction?.category || '',
     },

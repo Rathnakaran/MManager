@@ -52,7 +52,7 @@ export default function GoalForm({ goal, onFinished, onFormSubmit }: GoalFormPro
       name: goal?.name || '',
       targetAmount: goal?.targetAmount || 0,
       currentAmount: goal?.currentAmount || 0,
-      targetDate: goal?.targetDate ? new Date(goal.targetDate) : undefined,
+      targetDate: goal?.targetDate ? new Date(goal.targetDate + 'T00:00:00') : undefined,
     },
   });
 

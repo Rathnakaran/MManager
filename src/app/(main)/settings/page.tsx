@@ -230,7 +230,7 @@ export default function SettingsPage() {
         const userData = {
             name: values.name,
             email: values.email,
-            dateOfBirth: format(values.dateOfBirth, 'yyyy-MM-dd'),
+            dateOfBirth: values.dateOfBirth,
         }
         await updateUser(selectedUser.id, userData);
         await fetchUsers();
@@ -251,7 +251,7 @@ export default function SettingsPage() {
   
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
-    editUserForm.reset({ name: user.name, email: user.email, dateOfBirth: new Date(user.dateOfBirth) });
+    editUserForm.reset({ name: user.name, email: user.email, dateOfBirth: new Date(user.dateOfBirth + 'T00:00:00') });
     setIsEditUserOpen(true);
   }
 
