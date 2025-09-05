@@ -45,5 +45,5 @@ export interface User {
   name: string;
   password?: string; // Should be hashed
   dateOfBirth: string; // ISO 8601 format
-  role: 'admin' | 'user';
+  account_type: 'admin' | 'user';
 }

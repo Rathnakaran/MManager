@@ -257,7 +257,7 @@ export default function SettingsPage() {
     return <div>Loading user profile...</div>; // Or a skeleton loader
   }
 
-  const isAdmin = currentUser.role === 'admin';
+  const isAdmin = currentUser.account_type === 'admin';
 
   return (
     <div className="space-y-6">
@@ -348,7 +348,7 @@ export default function SettingsPage() {
                                     <div className="font-semibold flex items-center gap-2">
                                         {user.name}
                                         {user.id === currentUser.id && <Badge variant="secondary">You</Badge>}
-                                        {user.role === 'admin' && <Badge variant="default">Admin</Badge>}
+                                        {user.account_type === 'admin' && <Badge variant="default">Admin</Badge>}
                                     </div>
                                     <p className="text-sm text-muted-foreground">{user.email}</p>
                                     <p className="text-xs text-muted-foreground">@{user.username}</p>
