@@ -34,7 +34,6 @@ export async function createUser(userData: Omit<User, 'id' | 'role'>) {
     const newDocRef = await addDoc(usersCollection, userWithRole);
     const newUser = { id: newDocRef.id, ...userWithRole };
 
-    // Seed data for the new user - currently empty as requested
     await seedInitialData(newUser.id);
 
     revalidatePath('/settings');
@@ -64,11 +63,6 @@ export async function getUserByUsername(username: string, password?: string): Pr
     }
     const userDoc = snapshot.docs[0];
     const userData = userDoc.data();
-    
-    // Assign admin role to 'Rathnakaran' if role is not set
-    if (userData.username === 'Rathnakaran' && !userData.role) {
-        userData.role = 'admin';
-    }
 
     return { id: userDoc.id, ...userData } as User;
 }
@@ -78,10 +72,6 @@ export async function getUsers(): Promise<User[]> {
     const snapshot = await getDocs(usersCollection);
     return snapshot.docs.map(doc => {
         const data = doc.data();
-        // Assign admin role to 'Rathnakaran' if role is not set
-        if (data.username === 'Rathnakaran' && !data.role) {
-            data.role = 'admin';
-        }
         return { id: doc.id, ...data } as User;
     });
 }
@@ -149,6 +139,7 @@ export async function getBudgets(userId: string): Promise<Budget[]> {
 
 export async function getBudgetCategories(userId: string): Promise<string[]> {
     const budgets = await getBudgets(userId);
+    // All sample budgets removed as per user request.
     return budgets.map(b => b.category);
 }
 

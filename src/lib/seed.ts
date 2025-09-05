@@ -11,9 +11,9 @@ import { getUserByUsername, seedInitialData } from './actions';
 async function main() {
   console.log('Starting to seed data for admin user...');
   try {
-    const adminUser = await getUserByUsername('Rathnakaran');
+    const adminUser = await getUserByUsername('MahaRathna');
     if (!adminUser) {
-        console.error("Admin user 'Rathnakaran' not found. Please create this user manually in Firebase Authentication and Firestore `users` collection before seeding.");
+        console.error("Admin user 'MahaRathna' not found. Please create this user manually in Firebase Authentication and Firestore `users` collection before seeding.");
         return;
     }
     
