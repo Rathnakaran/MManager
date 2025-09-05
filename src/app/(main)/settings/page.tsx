@@ -381,34 +381,33 @@ export default function SettingsPage() {
                     ))}
                 </CardContent>
             </Card>
+
+            {/* Edit User Dialog */}
+            <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+                <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit User: @{selectedUser?.username}</DialogTitle>
+                    <DialogDescription>
+                    Update the user's details. Username cannot be changed.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...editUserForm}>
+                    <form onSubmit={editUserForm.handleSubmit(onEditUserSubmit)} className="space-y-4">
+                    <FormField control={editUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={editUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={editUserForm.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col pt-2"><FormLabel>Date of Birth</FormLabel><Popover open={isEditCalendarOpen} onOpenChange={setIsEditCalendarOpen}><PopoverTrigger asChild><FormControl><Button variant={'outline'} className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={(date) => {field.onChange(date); setIsEditCalendarOpen(false);}} captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
+                    <DialogFooter>
+                        <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                        <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Changes'}</Button>
+                    </DialogFooter>
+                    </form>
+                </Form>
+                </DialogContent>
+            </Dialog>
         </>
       )}
 
-
-      {/* Edit User Dialog */}
-      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User: @{selectedUser?.username}</DialogTitle>
-            <DialogDescription>
-              Update the user's details. Username cannot be changed.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...editUserForm}>
-            <form onSubmit={editUserForm.handleSubmit(onEditUserSubmit)} className="space-y-4">
-              <FormField control={editUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={editUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={editUserForm.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col pt-2"><FormLabel>Date of Birth</FormLabel><Popover open={isEditCalendarOpen} onOpenChange={setIsEditCalendarOpen}><PopoverTrigger asChild><FormControl><Button variant={'outline'} className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={(date) => {field.onChange(date); setIsEditCalendarOpen(false);}} captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-              <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-                <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Changes'}</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Change Password Dialog */}
+      {/* Change Password Dialog (for all users, including admin for themselves) */}
       <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
         <DialogContent>
           <DialogHeader>
@@ -429,7 +428,6 @@ export default function SettingsPage() {
           </Form>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
