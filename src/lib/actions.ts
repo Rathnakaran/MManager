@@ -90,12 +90,13 @@ export async function updateUserPassword(userId: string, newPassword: string) {
 
 // --- Data Fetching ---
 export async function getData(userId: string) {
-  const [transactions, budgets, goals] = await Promise.all([
+  const [transactions, budgets, goals, recurringTransactions] = await Promise.all([
     getTransactions(userId),
     getBudgets(userId),
     getGoals(userId),
+    getRecurringTransactions(userId),
   ]);
-  return { transactions, budgets, goals };
+  return { transactions, budgets, goals, recurringTransactions };
 }
 
 export async function getTransactions(userId: string): Promise<Transaction[]> {
@@ -312,3 +313,4 @@ export async function seedInitialData(userId: string) {
   await batch.commit();
   console.log(`Initial data seeded for user ${userId}`);
 }
+

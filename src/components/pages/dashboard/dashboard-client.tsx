@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import type { Transaction, Budget, Goal } from '@/types';
+import type { Transaction, Budget, Goal, RecurringTransaction } from '@/types';
 import { StatCards } from './stat-cards';
 import { ExpenseChart } from './charts';
 import { BudgetStatus } from './budget-status';
@@ -44,6 +44,7 @@ export default function DashboardClient({}: DashboardClientProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
 
   useEffect(() => {
     const userId = localStorage.getItem('loggedInUserId');
@@ -51,10 +52,11 @@ export default function DashboardClient({}: DashboardClientProps) {
 
     setIsLoading(true);
     getData(userId)
-      .then(({ transactions, budgets, goals }) => {
+      .then(({ transactions, budgets, goals, recurringTransactions }) => {
         setTransactions(transactions);
         setBudgets(budgets);
         setGoals(goals);
+        setRecurringTransactions(recurringTransactions);
       })
       .catch(() => {
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to load dashboard data.' });
@@ -189,3 +191,4 @@ export default function DashboardClient({}: DashboardClientProps) {
     </div>
   );
 }
+
