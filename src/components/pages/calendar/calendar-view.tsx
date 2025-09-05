@@ -32,27 +32,27 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
 
   const getSpendingLevelClass = (amount: number) => {
     if (amount === 0) return '';
-    if (amount < 1000) return 'bg-green-500/10 hover:bg-green-500/20'; // Low spending
-    if (amount < 5000) return 'bg-yellow-500/10 hover:bg-yellow-500/20'; // Medium spending
-    return 'bg-red-500/20 hover:bg-red-500/30'; // High spending
+    if (amount < 500) return 'bg-green-500/20 hover:bg-green-500/30'; 
+    if (amount <= 2000) return 'bg-yellow-500/20 hover:bg-yellow-500/30';
+    return 'bg-red-500/20 hover:bg-red-500/30';
   };
 
   const DayWithDetails = ({ date, displayMonth }: { date: Date, displayMonth: Date }) => {
     const isOutside = date.getMonth() !== displayMonth.getMonth();
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayTransactions = transactionsByDay[dateStr] || [];
-    const dailyTotal = dayTransactions
+    const dailyTotalExpenses = dayTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
-    const spendingClass = getSpendingLevelClass(dailyTotal);
+    const spendingClass = getSpendingLevelClass(dailyTotalExpenses);
 
     const cellContent = (
       <div className={cn("relative flex flex-col items-center justify-center h-full w-full rounded-md", !isOutside && spendingClass)}>
         <span>{format(date, 'd')}</span>
-        {dailyTotal > 0 && (
+        {dailyTotalExpenses > 0 && (
           <Badge variant="destructive" className="absolute bottom-1 text-xs px-1 h-4">
-            {formatCurrency(dailyTotal)}
+            {formatCurrency(dailyTotalExpenses)}
           </Badge>
         )}
       </div>
@@ -72,14 +72,18 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
             <h4 className="font-medium leading-none">{format(date, 'PPP')}</h4>
             <ScrollArea className="h-48">
               <div className="space-y-2 pr-4">
-                {dayTransactions.map(t => (
-                  <div key={t.id} className="flex justify-between items-center text-sm">
-                    <span className="flex-1 truncate pr-2">{t.description}</span>
-                    <span className={`font-medium ${t.type === 'income' ? 'text-green-500' : 'text-destructive'}`}>
-                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                    </span>
-                  </div>
-                ))}
+                {dayTransactions.length > 0 ? (
+                    dayTransactions.map(t => (
+                        <div key={t.id} className="flex justify-between items-center text-sm">
+                            <span className="flex-1 truncate pr-2">{t.description}</span>
+                            <span className={`font-medium ${t.type === 'income' ? 'text-green-500' : 'text-destructive'}`}>
+                                {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                            </span>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-sm text-muted-foreground">No transactions for this day.</p>
+                )}
               </div>
             </ScrollArea>
           </div>
