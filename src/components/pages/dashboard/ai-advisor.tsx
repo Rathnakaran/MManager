@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -12,6 +13,7 @@ import { getFinancialAdvice, type FinancialAdviceOutput } from '@/ai/flows/ai-fi
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lightbulb, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import MiniLoader from '@/components/layout/mini-loader';
 
 interface AiAdvisorProps {
   totalSpent: number;
@@ -60,12 +62,11 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
             Retry
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className='h-[60px] flex items-center'>
         {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
+            <div className='w-full'>
+                <MiniLoader />
+            </div>
         ) : advice ? (
           <div>
             <p className="text-muted-foreground">{advice.summary}</p>
