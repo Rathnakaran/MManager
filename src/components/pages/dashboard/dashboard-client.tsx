@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useTransition } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Transaction, Budget, Goal, RecurringTransaction } from '@/types';
 import { StatCards } from './stat-cards';
 import { BudgetStatus } from './budget-status';
@@ -17,6 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { getData, getUserIdFromCookie } from '@/lib/actions';
 import AppLoader from '@/components/layout/app-loader';
+import PowerBiReport from './power-bi-report';
 
 interface DashboardClientProps {}
 
@@ -91,59 +92,49 @@ export default function DashboardClient({}: DashboardClientProps) {
     return transactions.filter(t => t.date.startsWith(view));
 }, [transactions, view]);
 
+  const advisorData = useMemo(() => {
+      const currentMonth = getCurrentMonthValue();
+      
+      const monthlyTransactions = transactions.filter(t => t.date.startsWith(currentMonth));
+      
+      const monthlyTotalSpent = monthlyTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
 
-const advisorData = useMemo(() => {
-    const currentMonth = getCurrentMonthValue();
-    
-    const monthlyTransactions = transactions.filter(t => t.date.startsWith(currentMonth));
-    
-    const monthlyTotalSpent = monthlyTransactions
+      const monthlyTotalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
+      const monthlyRemainingBudget = monthlyTotalBudget - monthlyTotalSpent;
+      
+      const monthlyExpenseBreakdown: Record<string, number> = {};
+      monthlyTransactions
+        .filter(t => t.type === 'expense')
+        .forEach(t => {
+            if (!monthlyExpenseBreakdown[t.category]) {
+                monthlyExpenseBreakdown[t.category] = 0;
+            }
+            monthlyExpenseBreakdown[t.category] += t.amount;
+        });
+
+      return {
+        totalSpent: monthlyTotalSpent,
+        remainingBudget: monthlyRemainingBudget,
+        expenseBreakdown: monthlyExpenseBreakdown
+      };
+    }, [transactions, budgets]);
+
+  const totalSpent = useMemo(() => {
+    return filteredTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-
-    const monthlyTotalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
-    const monthlyRemainingBudget = monthlyTotalBudget - monthlyTotalSpent;
-    
-    const monthlyExpenseBreakdown: Record<string, number> = {};
-    monthlyTransactions
-      .filter(t => t.type === 'expense')
-      .forEach(t => {
-          if (!monthlyExpenseBreakdown[t.category]) {
-              monthlyExpenseBreakdown[t.category] = 0;
-          }
-          monthlyExpenseBreakdown[t.category] += t.amount;
-      });
-
-    return {
-      totalSpent: monthlyTotalSpent,
-      remainingBudget: monthlyRemainingBudget,
-      expenseBreakdown: monthlyExpenseBreakdown
-    };
-  }, [transactions, budgets]);
-
-const { totalSpent, expenseBreakdown } = useMemo(() => {
-    const breakdown: Record<string, number> = {};
-    const spent = filteredTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => {
-        if (!breakdown[t.category]) {
-            breakdown[t.category] = 0;
-        }
-        breakdown[t.category] += t.amount;
-        return sum + t.amount;
-      }, 0);
-
-      return { totalSpent: spent, expenseBreakdown: breakdown };
-}, [filteredTransactions]);
+  }, [filteredTransactions]);
 
   const { totalBudget, remainingBudget } = useMemo(() => {
     const isYearly = view === 'yearly';
     
     const relevantBudgets = budgets.reduce((sum, b) => sum + b.amount, 0);
-    const totalBudget = isYearly ? relevantBudgets * 12 : relevantBudgets;
+    const totalBudgetAmount = isYearly ? relevantBudgets * 12 : relevantBudgets;
     
-    const remainingBudget = totalBudget - totalSpent;
-    return { totalBudget, remainingBudget };
+    const remaining = totalBudgetAmount - totalSpent;
+    return { totalBudget: totalBudgetAmount, remainingBudget: remaining };
   }, [budgets, totalSpent, view]);
   
 
@@ -192,9 +183,12 @@ const { totalSpent, expenseBreakdown } = useMemo(() => {
         expenseBreakdown={advisorData.expenseBreakdown}
       />
 
-      <GoalProgress goals={goals} />
-      
-      <BudgetStatus transactions={filteredTransactions} budgets={budgets} view={view} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <GoalProgress goals={goals} />
+        <BudgetStatus transactions={filteredTransactions} budgets={budgets} view={view} />
+      </div>
+
+      <PowerBiReport />
     </div>
   );
 }
