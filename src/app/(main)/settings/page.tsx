@@ -67,6 +67,16 @@ const tamilQuotes = [
   "Vaazhkai-la Bayam Irukanum, Aana Bayame Vaazhkai Aagida Koodathu."
 ];
 
+const ageCheck = (dob: Date) => {
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        return age - 1;
+    }
+    return age;
+}
+
 const createUserFormSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -74,6 +84,9 @@ const createUserFormSchema = z.object({
   dateOfBirth: z.date({ required_error: 'Date of birth is required.' }),
   name: z.string().min(2, { message: 'Name is required.' }),
   account_type: z.enum(['user', 'admin'], { required_error: 'Account type is required.' }),
+}).refine(data => ageCheck(data.dateOfBirth) >= 15, {
+    message: "Thambi, nee innum valaranum! (User must be at least 15 years old).",
+    path: ["dateOfBirth"],
 });
 
 type CreateUserFormValues = z.infer<typeof createUserFormSchema>;
@@ -82,6 +95,9 @@ const editUserFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   dateOfBirth: z.date({ required_error: 'Date of birth is required.' }),
+}).refine(data => ageCheck(data.dateOfBirth) >= 15, {
+    message: "Thambi, nee innum valaranum! (User must be at least 15 years old).",
+    path: ["dateOfBirth"],
 });
 type EditUserFormValues = z.infer<typeof editUserFormSchema>;
 
@@ -417,3 +433,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
