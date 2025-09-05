@@ -55,7 +55,12 @@ const errorDialogues = [
     "Wrong details! \"Try again, 'nanba'.\"",
     "Incorrect credentials. \"Nadakkura vayasula sarakkudhama...\"",
     "Login failed. \"Moonu nimisham... time kudu... ipo sollunga.\"",
-    "Access denied. \"Therikka vidalama!\"... but with the right password."
+    "Access denied. \"Therikka vidalama!\"... but with the right password.",
+    "Wrong password! 'Naan saavuradhu urudhi, adha un kaiyaladhan... illa'.",
+    "Who are you? 'Yaaru nee? Enga irundhu varinga?'",
+    "Details not matching. 'Panatha thottavan, thottadhelam thulangaadhu'. Be careful.",
+    "Try again. 'Kashtapadama edhuvum kedaikathu.'",
+    "User not found. 'Yaarume illa, thambi.' Check your username."
 ];
 
 const successDialogues = [
