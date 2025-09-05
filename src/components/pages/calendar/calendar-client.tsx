@@ -7,10 +7,20 @@ import { getTransactions, getUserIdFromCookie } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import AppLoader from '@/components/layout/app-loader';
 import CalendarView from './calendar-view';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+export type CalendarViewType = 'monthly' | 'weekly' | 'daily';
 
 export default function CalendarClient() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [view, setView] = useState<CalendarViewType>('monthly');
     const { toast } = useToast();
 
     const fetchData = async () => {
@@ -20,7 +30,11 @@ export default function CalendarClient() {
             return;
         }
 
-        setIsLoading(true);
+        // Don't set loading to true on refetch
+        if (transactions.length === 0) {
+            setIsLoading(true);
+        }
+        
         getTransactions(userId)
             .then(setTransactions)
             .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transactions.' }))
@@ -29,7 +43,7 @@ export default function CalendarClient() {
 
     useEffect(() => {
         fetchData();
-    }, [toast]);
+    }, []);
 
     if (isLoading) {
         return (
@@ -41,11 +55,27 @@ export default function CalendarClient() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h1 className="text-2xl font-bold font-headline">Transaction Calendar</h1>
-                <p className="text-sm text-muted-foreground italic">"Oru naal-la enna nadakkudhu nu paaru!" (See what happens in a day!)</p>
+                <div className='flex items-center gap-4'>
+                    <p className="text-sm text-muted-foreground italic hidden md:block">"Oru naal-la enna nadakkudhu nu paaru!"</p>
+                    <Select value={view} onValueChange={(value) => setView(value as CalendarViewType)}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select view" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="monthly">Monthly View</SelectItem>
+                            <SelectItem value="weekly">Weekly View</SelectItem>
+                            <SelectItem value="daily">Daily View</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <CalendarView transactions={transactions} onDataChange={fetchData} />
+            <CalendarView 
+                transactions={transactions} 
+                onDataChange={fetchData}
+                view={view}
+            />
         </div>
     );
 }
