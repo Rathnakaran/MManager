@@ -32,6 +32,7 @@ import {
   Pencil,
   Trash2,
   KeyRound,
+  CalendarDays,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -41,6 +42,7 @@ export type IconName =
   | 'PiggyBank'
   | 'Target'
   | 'Repeat'
+  | 'CalendarDays'
   | 'ShoppingCart'
   | 'Utensils'
   | 'Car'
@@ -68,9 +70,10 @@ export const Icons = {
   budgets: PiggyBank,
   goals: Target,
   recurring: Repeat,
+  calendar: CalendarDays,
   down: ChevronDown,
   up: ChevronUp,
-  more: MoreHorizontal,
+more: MoreHorizontal,
   add: PlusCircle,
   import: FileUp,
   export: FileDown,
@@ -103,6 +106,7 @@ const iconMap: Record<string, LucideIcon> = {
   PiggyBank,
   Target,
   Repeat,
+  CalendarDays,
   ShoppingCart,
   Utensils,
   Car,

@@ -18,6 +18,7 @@ const menuItems = [
   { href: '/budgets', label: 'Budgets', icon: Icons.budgets },
   { href: '/goals', label: 'Goals', icon: Icons.goals },
   { href: '/recurring', label: 'Recurring', icon: Icons.recurring },
+  { href: '/calendar', label: 'Calendar', icon: Icons.calendar },
 ];
 
 export default function AppSidebar() {
