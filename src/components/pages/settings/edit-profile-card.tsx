@@ -137,7 +137,7 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
                 <div className="relative">
                     <Avatar className="h-24 w-24">
                         <AvatarImage src={photo || ''} alt={currentUser.name} />
-                        <AvatarFallback>{currentUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{(currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <Button 
                         type="button"
