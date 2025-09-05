@@ -404,30 +404,32 @@ export default function SettingsPage() {
                 </Form>
                 </DialogContent>
             </Dialog>
+      
+            {/* Change Password Dialog */}
+            <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Change Password for @{selectedUser?.username}</DialogTitle>
+                  <DialogDescription>
+                    Enter a new password. Make it a strong one, 'thalaiva'!
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...passwordForm}>
+                  <form onSubmit={passwordForm.handleSubmit(onChangePasswordSubmit)} className="space-y-4">
+                    <FormField control={passwordForm.control} name="newPassword" render={({ field }) => (<FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                    <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (<FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                    <DialogFooter>
+                      <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                      <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Password'}</Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
         </>
       )}
-
-      {/* Change Password Dialog (for all users, including admin for themselves) */}
-      <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change Password for @{selectedUser?.username}</DialogTitle>
-            <DialogDescription>
-              Enter a new password. Make it a strong one, 'thalaiva'!
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...passwordForm}>
-            <form onSubmit={passwordForm.handleSubmit(onChangePasswordSubmit)} className="space-y-4">
-              <FormField control={passwordForm.control} name="newPassword" render={({ field }) => (<FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-              <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (<FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-              <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-                <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Password'}</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
+
+    
