@@ -81,6 +81,19 @@ const successDialogues = [
     "Naanga yaru nu theriyulla? FinWise thalaivar!",
 ];
 
+const creatorDialogues = [
+    "\"En vazhi, thani vazhi.\" - Superstar Rajinikanth",
+    "\"Vaazhkai-la bayam irukanum, aana bayame vaazhkai aagida koodathu.\" - Ajith Kumar",
+    "\"I'm waiting!\" - Vijay",
+    "\"Kashtapadama edhuvum kedaikathu, kashtapadama kedaikurathu ennikum nilaikaadhu.\" - Superstar Rajinikanth",
+    "\"Don't trouble the trouble. If you trouble the trouble, trouble will trouble you!\" - Ajith Kumar",
+    "\"It's just the beginning.\" - Vijay",
+    "\"Naan veezhven endru ninaithayo?\" - Superstar Rajinikanth",
+    "\"Once I decide, I don't even listen to myself.\" - Ajith Kumar",
+    "\"Vaathi coming!\" - Vijay",
+    "\"Singam single-a dhaan varum.\" - Superstar Rajinikanth"
+];
+
 const setCookie = (name: string, value: string, days: number) => {
     let expires = "";
     if (days) {
@@ -97,10 +110,12 @@ export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
   const [welcomeMessage, setWelcomeMessage] = useState(welcomeDialogues[0]);
   const [descriptionMessage, setDescriptionMessage] = useState(descriptionDialogues[0]);
+  const [creatorQuote, setCreatorQuote] = useState(creatorDialogues[0]);
 
   useEffect(() => {
     setWelcomeMessage(welcomeDialogues[Math.floor(Math.random() * welcomeDialogues.length)]);
     setDescriptionMessage(descriptionDialogues[Math.floor(Math.random() * descriptionDialogues.length)]);
+    setCreatorQuote(creatorDialogues[Math.floor(Math.random() * creatorDialogues.length)]);
   }, []);
 
   const form = useForm<FormValues>({
@@ -198,7 +213,7 @@ export default function LoginPage() {
                     <p className='font-bold text-lg'>Rathnakaran M</p>
                     <p className='text-sm text-muted-foreground'>rathnakaran480@gmail.com</p>
                     <p className='text-xs italic pt-4'>
-                        "En vazhi, thani vazhi." - Superstar Rajinikanth
+                        {creatorQuote}
                     </p>
                 </div>
             </DialogContent>
