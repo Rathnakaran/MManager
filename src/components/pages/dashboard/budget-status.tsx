@@ -9,9 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { getIconByName } from '@/components/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMemo } from 'react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 interface BudgetStatusProps {
   transactions: Transaction[];
@@ -29,19 +29,20 @@ export function BudgetStatus({ transactions, budgets, view }: BudgetStatusProps)
       const spent = transactions
         .filter(t => t.type === 'expense' && t.category === budget.category)
         .reduce((sum, t) => sum + t.amount, 0);
-      const progress = totalBudget > 0 ? (spent / totalBudget) * 100 : 0;
       const remaining = totalBudget - spent;
-      return { ...budget, spent, progress, remaining, totalBudget };
+      return { ...budget, spent, remaining, totalBudget };
     });
   }, [budgets, transactions, view]);
 
   const periodText = useMemo(() => {
     if (view === 'yearly') {
-        return `Annual budget status for ${new Date().getFullYear()}.`;
+        const year = new Date().getFullYear();
+        return `Are you a king or a beggar this ${year}?`;
     }
     const [year, month] = view.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1);
-    return `Monthly budget status for ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}.`;
+    const monthName = date.toLocaleString('default', { month: 'long' });
+    return `Are you a king or a beggar this ${monthName} ${date.getFullYear()}?`;
   }, [view]);
 
   return (
@@ -54,19 +55,23 @@ export function BudgetStatus({ transactions, budgets, view }: BudgetStatusProps)
         <ScrollArea className="h-[300px] pr-4">
           <div className="space-y-4">
             {budgetWithSpending.map(item => {
-              const Icon = getIconByName(item.icon);
+              const isOverspent = item.remaining < 0;
               return (
                 <div key={item.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-muted rounded-full">
-                      <Icon className="h-5 w-5 text-muted-foreground" />
-                    </div>
+                    {isOverspent ? (
+                      <XCircle className="h-6 w-6 text-destructive" />
+                    ) : (
+                      <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    )}
                     <div>
                       <p className="font-medium">{item.category}</p>
-                      <p className="text-xs text-muted-foreground">Spent {formatCurrency(item.spent)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Spent {formatCurrency(item.spent)} of {formatCurrency(item.totalBudget)}
+                      </p>
                     </div>
                   </div>
-                  <div className={`font-semibold ${item.remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                  <div className={`font-semibold ${isOverspent ? 'text-destructive' : 'text-primary'}`}>
                     {formatCurrency(item.remaining)}
                   </div>
                 </div>
