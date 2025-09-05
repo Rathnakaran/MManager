@@ -32,7 +32,7 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
 
   const getSpendingLevelClass = (amount: number) => {
     if (amount === 0) return '';
-    if (amount < 500) return 'bg-green-500/20 hover:bg-green-500/30'; 
+    if (amount < 500) return 'bg-green-500/20 hover:bg-green-500/30';
     if (amount <= 2000) return 'bg-yellow-500/20 hover:bg-yellow-500/30';
     return 'bg-red-500/20 hover:bg-red-500/30';
   };
@@ -41,8 +41,13 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
     const isOutside = date.getMonth() !== displayMonth.getMonth();
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayTransactions = transactionsByDay[dateStr] || [];
+    
     const dailyTotalExpenses = dayTransactions
         .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const dailyTotalIncome = dayTransactions
+        .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
 
     const spendingClass = getSpendingLevelClass(dailyTotalExpenses);
@@ -54,6 +59,11 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
           <Badge variant="destructive" className="absolute bottom-1 text-xs px-1 h-4">
             {formatCurrency(dailyTotalExpenses)}
           </Badge>
+        )}
+        {dailyTotalIncome > dailyTotalExpenses && (
+           <Badge variant="default" className="absolute bottom-1 text-xs px-1 h-4 bg-primary text-primary-foreground">
+             +{formatCurrency(dailyTotalIncome - dailyTotalExpenses)}
+           </Badge>
         )}
       </div>
     );
@@ -76,7 +86,7 @@ export default function CalendarView({ transactions }: CalendarViewProps) {
                     dayTransactions.map(t => (
                         <div key={t.id} className="flex justify-between items-center text-sm">
                             <span className="flex-1 truncate pr-2">{t.description}</span>
-                            <span className={`font-medium ${t.type === 'income' ? 'text-green-500' : 'text-destructive'}`}>
+                            <span className={`font-medium ${t.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
                                 {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                             </span>
                         </div>
