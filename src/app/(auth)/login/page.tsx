@@ -42,6 +42,14 @@ const welcomeDialogues = [
   "Singam Single-a Dhaan Varum."
 ];
 
+const descriptionDialogues = [
+    "\"Kanaku ellam correct-a irukanum!\" Login to continue.",
+    "\"Money is not everything, but it's something very important.\" Login to proceed.",
+    "\"Every rupee counts. Let's make them count!\" Login to start.",
+    "\"The secret to getting ahead is getting started.\" Login below.",
+    "\"Your financial journey begins here.\" Login to FinWise."
+];
+
 const setCookie = (name: string, value: string, days: number) => {
     let expires = "";
     if (days) {
@@ -57,9 +65,11 @@ export default function LoginPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [welcomeMessage, setWelcomeMessage] = useState(welcomeDialogues[0]);
+  const [descriptionMessage, setDescriptionMessage] = useState(descriptionDialogues[0]);
 
   useEffect(() => {
     setWelcomeMessage(welcomeDialogues[Math.floor(Math.random() * welcomeDialogues.length)]);
+    setDescriptionMessage(descriptionDialogues[Math.floor(Math.random() * descriptionDialogues.length)]);
   }, []);
 
   const form = useForm<FormValues>({
@@ -102,7 +112,7 @@ export default function LoginPage() {
     <Card className="w-full max-w-md mx-4">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold font-headline">{welcomeMessage}</CardTitle>
-        <CardDescription>"Kanaku ellam correct-a irukanum!" Login to continue.</CardDescription>
+        <CardDescription>{descriptionMessage}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
