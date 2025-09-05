@@ -145,7 +145,7 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
                         size="icon" 
                         className="absolute bottom-0 right-0 rounded-full"
                         onClick={() => photoInputRef.current?.click()}
-                        disabled={isUploading}
+                        disabled={isUploading || isPending}
                     >
                         {isUploading ? <MiniLoader /> : <Camera className="h-4 w-4" />}
                     </Button>
@@ -155,7 +155,7 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
                         ref={photoInputRef}
                         accept="image/png, image/jpeg" 
                         onChange={handlePhotoUpload}
-                        disabled={isUploading}
+                        disabled={isUploading || isPending}
                     />
                 </div>
               <div className="grid w-full gap-4">
@@ -166,7 +166,7 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
                           <FormItem>
                           <FormLabel>Name</FormLabel>
                           <FormControl>
-                              <Input {...field} />
+                              <Input {...field} disabled={isPending || isUploading} />
                           </FormControl>
                           <FormMessage />
                           </FormItem>
@@ -179,7 +179,7 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
                           <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                              <Input type="email" {...field} />
+                              <Input type="email" {...field} disabled={isPending || isUploading} />
                           </FormControl>
                           <FormMessage />
                           </FormItem>
@@ -200,7 +200,7 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button type="button" variant="secondary" onClick={onPasswordChangeClick}>
+            <Button type="button" variant="secondary" onClick={onPasswordChangeClick} disabled={isPending || isUploading}>
               <KeyRound className="mr-2" /> Change My Password
             </Button>
             <Button type="submit" disabled={isPending || isUploading}>

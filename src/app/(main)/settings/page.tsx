@@ -280,7 +280,7 @@ export default function SettingsPage() {
                     </div>
                     <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
                         <DialogTrigger asChild>
-                            <Button><UserPlus className="mr-2 h-4 w-4" /> Create New User</Button>
+                            <Button disabled={isPending}><UserPlus className="mr-2 h-4 w-4" /> Create New User</Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
@@ -341,12 +341,12 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                             <div className="flex gap-2 mt-4 sm:mt-0">
-                                <Button variant="outline" size="sm" onClick={() => openEditDialog(user)}><Edit className="mr-2 h-3 w-3" /> Edit</Button>
-                                <Button variant="secondary" size="sm" onClick={() => openPasswordDialog(user)}><KeyRound className="mr-2 h-3 w-3" /> Change Password</Button>
+                                <Button variant="outline" size="sm" onClick={() => openEditDialog(user)} disabled={isPending}><Edit className="mr-2 h-3 w-3" /> Edit</Button>
+                                <Button variant="secondary" size="sm" onClick={() => openPasswordDialog(user)} disabled={isPending}><KeyRound className="mr-2 h-3 w-3" /> Change Password</Button>
                                 {user.id !== currentUser.id && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="sm"><Trash2 className="mr-2 h-3 w-3" /> Delete</Button>
+                                        <Button variant="destructive" size="sm" disabled={isPending}><Trash2 className="mr-2 h-3 w-3" /> Delete</Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
