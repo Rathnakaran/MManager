@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { addRecurringTransaction, updateRecurringTransaction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { RecurringTransaction } from '@/types';
 import { useTransition } from 'react';
@@ -41,9 +40,10 @@ interface RecurringFormProps {
   recurringTransaction?: RecurringTransaction | null;
   categories: string[];
   onFinished: () => void;
+  onFormSubmit: (values: Omit<RecurringTransaction, 'id' | 'userId'>, id?:string) => void;
 }
 
-export default function RecurringForm({ recurringTransaction, categories, onFinished }: RecurringFormProps) {
+export default function RecurringForm({ recurringTransaction, categories, onFinished, onFormSubmit }: RecurringFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
@@ -61,18 +61,7 @@ export default function RecurringForm({ recurringTransaction, categories, onFini
 
   const onSubmit = (values: FormValues) => {
     startTransition(async () => {
-      try {
-        if (recurringTransaction) {
-          await updateRecurringTransaction(recurringTransaction.id, values);
-          toast({ title: 'Success', description: 'Recurring transaction updated.' });
-        } else {
-          await addRecurringTransaction(values);
-          toast({ title: 'Success', description: 'Recurring transaction added.' });
-        }
-        onFinished();
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-      }
+        onFormSubmit(values, recurringTransaction?.id);
     });
   };
 
@@ -203,4 +192,3 @@ export default function RecurringForm({ recurringTransaction, categories, onFini
     </Form>
   );
 }
-

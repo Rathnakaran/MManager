@@ -51,6 +51,7 @@ export default function LoginPage() {
       try {
         const user = await getUserByUsername(values.username, values.password);
         if (user) {
+          localStorage.setItem('loggedInUserId', user.id);
           toast({
             title: 'Success!',
             description: `Welcome back, ${user.username}! "Vaathi Coming!"`,

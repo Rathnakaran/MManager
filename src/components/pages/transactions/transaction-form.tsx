@@ -47,7 +47,7 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
   categories: { budgetCategories: string[], goalCategories: string[] };
   onFinished: () => void;
-  onFormSubmit: (values: Omit<Transaction, 'id'>, id?: string) => void;
+  onFormSubmit: (values: Omit<Transaction, 'id' | 'userId'>, id?: string) => void;
 }
 
 export default function TransactionForm({ transaction, categories, onFinished, onFormSubmit }: TransactionFormProps) {

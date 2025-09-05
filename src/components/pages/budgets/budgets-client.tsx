@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { addBudget, deleteBudget, updateBudget } from '@/lib/actions';
+import { addBudget, deleteBudget, updateBudget, getBudgets, getTransactions } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getIconByName } from '@/components/icons';
 import {
@@ -26,11 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import BudgetForm from './budget-form';
-
-interface BudgetsClientProps {
-  initialBudgets: Budget[];
-  initialTransactions: Transaction[];
-}
+import { Skeleton } from '@/components/ui/skeleton';
 
 const budgetTitles = [
     "The Budgeting Battlefield",
@@ -39,18 +35,39 @@ const budgetTitles = [
     "Budget Podu, Life-a Maathu!",
 ];
 
-export default function BudgetsClient({ initialBudgets, initialTransactions }: BudgetsClientProps) {
-  const [budgets, setBudgets] = useState(initialBudgets);
-  const [transactions, setTransactions] = useState(initialTransactions);
+export default function BudgetsClient() {
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [title, setTitle] = useState(budgetTitles[0]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
+    const fetchData = async () => {
+        const userId = localStorage.getItem('loggedInUserId');
+        if (!userId) return;
+
+        setIsLoading(true);
+        try {
+            const [budgetsData, transactionsData] = await Promise.all([
+                getBudgets(userId),
+                getTransactions(userId)
+            ]);
+            setBudgets(budgetsData);
+            setTransactions(transactionsData);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch data.' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    fetchData();
     setTitle(budgetTitles[Math.floor(Math.random() * budgetTitles.length)]);
-  }, []);
+  }, [toast]);
 
   const handleEdit = (budget: Budget) => {
     setSelectedBudget(budget);
@@ -88,22 +105,30 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
     });
   };
 
-  const onFormSubmit = (values: Omit<Budget, 'id'>, id?: string) => {
+  const onFormSubmit = (values: Omit<Budget, 'id' | 'userId'>, id?: string) => {
     startTransition(async () => {
-      try {
-        if (id) {
-          const updatedBudget = await updateBudget(id, values);
-          setBudgets(prev => prev.map(b => b.id === id ? updatedBudget : b));
-          toast({ title: 'Success', description: 'Budget updated successfully.' });
-        } else {
-          const newBudget = await addBudget(values);
-          setBudgets(prev => [newBudget, ...prev]);
-          toast({ title: 'Success', description: 'Budget added successfully.' });
+        const userId = localStorage.getItem('loggedInUserId');
+        if (!userId) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+            return;
         }
-        handleSheetClose();
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-      }
+
+        const budgetData = { ...values, userId };
+
+        try {
+            if (id) {
+            const updatedBudget = await updateBudget(id, budgetData);
+            setBudgets(prev => prev.map(b => b.id === id ? updatedBudget : b));
+            toast({ title: 'Success', description: 'Budget updated successfully.' });
+            } else {
+            const newBudget = await addBudget(budgetData);
+            setBudgets(prev => [newBudget, ...prev]);
+            toast({ title: 'Success', description: 'Budget added successfully.' });
+            }
+            handleSheetClose();
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
     });
   };
   
@@ -136,6 +161,27 @@ export default function BudgetsClient({ initialBudgets, initialTransactions }: B
       }
     })
   }, [budgets, transactions]);
+  
+  if (isLoading) {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-10 w-44" />
+            </div>
+            <Card>
+                <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

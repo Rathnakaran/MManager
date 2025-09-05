@@ -39,7 +39,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface GoalFormProps {
   goal?: Goal | null;
   onFinished: () => void;
-  onFormSubmit: (values: FormValues, id?: string) => Promise<void>;
+  onFormSubmit: (values: Omit<Goal, 'id' | 'userId' | 'targetDate'> & {targetDate: Date}, id?: string) => Promise<void>;
 }
 
 export default function GoalForm({ goal, onFinished, onFormSubmit }: GoalFormProps) {

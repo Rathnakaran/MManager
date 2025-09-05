@@ -1,6 +1,7 @@
 
 export interface Transaction {
   id: string;
+  userId: string;
   date: string; // ISO 8601 format
   description: string;
   amount: number;
@@ -10,6 +11,7 @@ export interface Transaction {
 
 export interface Budget {
   id: string;
+  userId: string;
   category: string;
   amount: number;
   icon: string;
@@ -17,6 +19,7 @@ export interface Budget {
 
 export interface Goal {
   id: string;
+  userId: string;
   name: string;
   targetAmount: number;
   currentAmount: number;
@@ -25,6 +28,7 @@ export interface Goal {
 
 export interface RecurringTransaction {
   id: string;
+  userId: string;
   description: string;
   category: string;
   amount: number;

@@ -1,21 +1,20 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import type { Goal } from '@/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Target } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { addGoal, deleteGoal, updateGoal } from '@/lib/actions';
+import { addGoal, deleteGoal, updateGoal, getGoals } from '@/lib/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import GoalForm from './goal-form';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface GoalsClientProps {
-  initialGoals: Goal[];
-}
+interface GoalsClientProps {}
 
 const goalTitles = [
     "Your Future, Your Sketch!",
@@ -24,16 +23,27 @@ const goalTitles = [
     "Dream Big, Plan Bigger!",
 ];
 
-export default function GoalsClient({ initialGoals }: GoalsClientProps) {
-  const [goals, setGoals] = useState(initialGoals);
+export default function GoalsClient({}: GoalsClientProps) {
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [title, setTitle] = useState(goalTitles[0]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   useEffect(() => {
+    const userId = localStorage.getItem('loggedInUserId');
+    if (!userId) return;
+
+    setIsLoading(true);
+    getGoals(userId)
+      .then(setGoals)
+      .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to load goals.' }))
+      .finally(() => setIsLoading(false));
+
     setTitle(goalTitles[Math.floor(Math.random() * goalTitles.length)]);
-  }, []);
+  }, [toast]);
 
   const handleEdit = (goal: Goal) => {
     setSelectedGoal(goal);
@@ -53,47 +63,73 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this goal?')) return;
     
-    setGoals(prev => prev.filter(g => g.id !== id));
-    try {
-      await deleteGoal(id);
-      toast({
-        title: 'Success!',
-        description: 'Goal deleted. "Mind voice: Annan innoru thadava koopdapattar!"',
-      });
-    } catch (error) {
-      setGoals(initialGoals);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete goal.',
-      });
-    }
+    startTransition(async () => {
+        try {
+            await deleteGoal(id);
+            setGoals(prev => prev.filter(g => g.id !== id));
+            toast({
+                title: 'Success!',
+                description: 'Goal deleted. "Mind voice: Annan innoru thadava koopdapattar!"',
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to delete goal.',
+            });
+        }
+    });
   };
 
-  const onFormSubmit = async (values: Omit<Goal, 'id' | 'targetDate'> & {targetDate: Date}, id?: string) => {
+  const onFormSubmit = async (values: Omit<Goal, 'id' | 'userId' | 'targetDate'> & {targetDate: Date}, id?: string) => {
+    const userId = localStorage.getItem('loggedInUserId');
+    if (!userId) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+        return;
+    }
+    
     const goalData = {
         ...values,
+        userId,
         targetDate: values.targetDate.toISOString().split('T')[0],
     };
 
-    try {
-        if (id) {
-            const updatedGoal = await updateGoal(id, goalData);
-            setGoals(prev => prev.map(g => g.id === id ? updatedGoal : g));
-            toast({ title: 'Success', description: 'Goal updated successfully. "Vaathi Coming!"' });
-        } else {
-            const newGoal = await addGoal(goalData);
-            setGoals(prev => [newGoal, ...prev]);
-            toast({ title: 'Success', description: 'Goal added successfully. "It\'s a brand!"' });
+    startTransition(async () => {
+        try {
+            if (id) {
+                const updatedGoal = await updateGoal(id, goalData);
+                setGoals(prev => prev.map(g => g.id === id ? updatedGoal : g));
+                toast({ title: 'Success', description: 'Goal updated successfully. "Vaathi Coming!"' });
+            } else {
+                const newGoal = await addGoal(goalData);
+                setGoals(prev => [newGoal, ...prev]);
+                toast({ title: 'Success', description: 'Goal added successfully. "It\'s a brand!"' });
+            }
+            handleSheetClose();
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
         }
-        handleSheetClose();
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
-    }
+    });
   }
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+  if (isLoading) {
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-10 w-32" />
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-48" />
+                <Skeleton className="h-48" />
+                <Skeleton className="h-48" />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -142,18 +178,19 @@ export default function GoalsClient({ initialGoals }: GoalsClientProps) {
                         </div>
                         <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
                             <span className="sr-only">Open menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(goal)}>
+                            <DropdownMenuItem onClick={() => handleEdit(goal)} disabled={isPending}>
                             Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => handleDelete(goal.id)}
+                             disabled={isPending}
                             >
                             Delete
                             </DropdownMenuItem>

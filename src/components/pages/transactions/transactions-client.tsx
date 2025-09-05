@@ -10,14 +10,20 @@ import { columns } from './columns';
 import TransactionForm from './transaction-form';
 import { FileDown, FileUp, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { importTransactions, addTransaction, updateTransaction, deleteTransaction } from '@/lib/actions';
+import { 
+    importTransactions, 
+    addTransaction, 
+    updateTransaction, 
+    deleteTransaction,
+    getTransactions,
+    getBudgetCategories,
+    getGoalCategories
+} from '@/lib/actions';
 import Papa from 'papaparse';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
-interface TransactionsClientProps {
-  initialTransactions: Transaction[];
-  categories: { budgetCategories: string[], goalCategories: string[] };
-}
+interface TransactionsClientProps {}
 
 const transactionTitles = [
     "Your 'Kanaku-Pillai' Diary",
@@ -26,17 +32,40 @@ const transactionTitles = [
     "Every Rupee tells a story",
 ];
 
-export default function TransactionsClient({ initialTransactions, categories }: TransactionsClientProps) {
-  const [transactions, setTransactions] = useState(initialTransactions);
+export default function TransactionsClient({}: TransactionsClientProps) {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<{ budgetCategories: string[], goalCategories: string[] }>({ budgetCategories: [], goalCategories: [] });
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [title, setTitle] = useState(transactionTitles[0]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   
   useEffect(() => {
+    const fetchData = async () => {
+        const userId = localStorage.getItem('loggedInUserId');
+        if (!userId) return;
+
+        setIsLoading(true);
+        try {
+            const [transactionsData, budgetCats, goalCats] = await Promise.all([
+                getTransactions(userId),
+                getBudgetCategories(userId),
+                getGoalCategories(userId)
+            ]);
+            setTransactions(transactionsData);
+            setCategories({ budgetCategories: budgetCats, goalCategories: goalCats });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transaction data.' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    fetchData();
     setTitle(transactionTitles[Math.floor(Math.random() * transactionTitles.length)]);
-  }, []);
+  }, [toast]);
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -53,29 +82,30 @@ export default function TransactionsClient({ initialTransactions, categories }: 
       setSelectedTransaction(null);
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('Are you sure you want to delete this transaction?')) return;
     
     startTransition(async () => {
         try {
             await deleteTransaction(id);
             setTransactions(prev => prev.filter(t => t.id !== id));
-            toast({
-                title: 'Success',
-                description: 'Transaction deleted successfully.',
-            });
+            toast({ title: 'Success', description: 'Transaction deleted successfully.' });
         } catch (error) {
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Failed to delete transaction.',
-            });
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete transaction.' });
         }
     });
   };
 
-  const onFormSubmit = (transactionData: Omit<Transaction, 'id'>, id?: string) => {
+  const onFormSubmit = (values: Omit<Transaction, 'id' | 'userId'>, id?: string) => {
     startTransition(async () => {
+      const userId = localStorage.getItem('loggedInUserId');
+      if (!userId) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+        return;
+      }
+      
+      const transactionData = { ...values, userId };
+
       try {
         if (id) {
           const updatedTransaction = await updateTransaction(id, transactionData);
@@ -96,31 +126,31 @@ export default function TransactionsClient({ initialTransactions, categories }: 
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-        startTransition(async () => {
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: async (results) => {
-                  try {
-                    await importTransactions(results.data);
-                    // This will need a page refresh for imported data to show.
-                    // A more advanced implementation could re-fetch or merge.
-                    toast({
-                      title: "Import Successful",
-                      description: `${results.data.length} transactions have been imported. Please refresh to see them.`,
-                    });
-                  } catch (error) {
-                    toast({
-                      variant: "destructive",
-                      title: "Import Failed",
-                      description: "Could not import transactions.",
-                    });
-                  }
-                },
-              });
-        });
-    }
+    const userId = localStorage.getItem('loggedInUserId');
+    if (!file || !userId) return;
+
+    startTransition(async () => {
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+              try {
+                const newTransactions = await importTransactions(userId, results.data);
+                setTransactions(prev => [...newTransactions, ...prev]);
+                toast({
+                  title: "Import Successful",
+                  description: `${results.data.length} transactions have been imported.`,
+                });
+              } catch (error) {
+                toast({
+                  variant: "destructive",
+                  title: "Import Failed",
+                  description: "Could not import transactions.",
+                });
+              }
+            },
+          });
+    });
   };
 
   const handleExport = () => {
@@ -137,6 +167,22 @@ export default function TransactionsClient({ initialTransactions, categories }: 
     toast({ title: "Export Started", description: "Your transaction data is being downloaded."});
   };
 
+  if (isLoading) {
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-1/3" />
+                <div className="flex gap-2">
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-40" />
+                </div>
+            </div>
+            <Skeleton className="h-96 w-full" />
+        </div>
+    );
+  }
+
 
   return (
     <div className="space-y-4">
@@ -151,7 +197,7 @@ export default function TransactionsClient({ initialTransactions, categories }: 
               <label htmlFor="csv-import">
                 <FileUp className="mr-2 h-4 w-4" />
                 Import
-                <input type="file" id="csv-import" accept=".csv" onChange={handleImport} className="sr-only" />
+                <input type="file" id="csv-import" accept=".csv" onChange={handleImport} className="sr-only" disabled={isPending} />
               </label>
             </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

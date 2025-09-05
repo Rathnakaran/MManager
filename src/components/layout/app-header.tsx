@@ -21,6 +21,7 @@ export default function AppHeader() {
   const { toast } = useToast();
 
   const handleLogout = () => {
+    localStorage.removeItem('loggedInUserId');
     toast({
       title: 'Logged Out',
       description: '"Poitu varen!" (See you later!)',

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import type { RecurringTransaction } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,18 +23,49 @@ import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, PlusCircle, Repeat } from 'lucide-react';
 import RecurringForm from './recurring-form';
 import { useToast } from '@/hooks/use-toast';
-import { deleteRecurringTransaction } from '@/lib/actions';
+import { 
+    addRecurringTransaction, 
+    deleteRecurringTransaction, 
+    updateRecurringTransaction,
+    getRecurringTransactions, 
+    getBudgetCategories 
+} from '@/lib/actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
-interface RecurringClientProps {
-  initialRecurringTransactions: RecurringTransaction[];
-  categories: string[];
-}
+interface RecurringClientProps {}
 
-export default function RecurringClient({ initialRecurringTransactions, categories }: RecurringClientProps) {
+export default function RecurringClient({}: RecurringClientProps) {
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selected, setSelected] = useState<RecurringTransaction | null>(null);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+        const userId = localStorage.getItem('loggedInUserId');
+        if (!userId) return;
+
+        setIsLoading(true);
+        try {
+            const [recurringData, categoriesData] = await Promise.all([
+                getRecurringTransactions(userId),
+                getBudgetCategories(userId)
+            ]);
+            setRecurringTransactions(recurringData);
+            setCategories(categoriesData);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch recurring transactions.' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchData();
+  }, [toast]);
+
 
   const handleEdit = (item: RecurringTransaction) => {
     setSelected(item);
@@ -51,22 +82,45 @@ export default function RecurringClient({ initialRecurringTransactions, categori
     setSelected(null);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('Are you sure you want to delete this recurring transaction?')) return;
-    try {
-      await deleteRecurringTransaction(id);
-      toast({
-        title: 'Success',
-        description: 'Recurring transaction deleted.',
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete recurring transaction.',
-      });
-    }
+    startTransition(async () => {
+        try {
+          await deleteRecurringTransaction(id);
+          setRecurringTransactions(prev => prev.filter(item => item.id !== id));
+          toast({ title: 'Success', description: 'Recurring transaction deleted.' });
+        } catch (error) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete recurring transaction.' });
+        }
+    });
   };
+
+  const onFormSubmit = (values: Omit<RecurringTransaction, 'id' | 'userId'>, id?: string) => {
+    startTransition(async () => {
+        const userId = localStorage.getItem('loggedInUserId');
+        if (!userId) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+            return;
+        }
+
+        const recurringData = { ...values, userId };
+
+        try {
+            if (id) {
+                const updated = await updateRecurringTransaction(id, recurringData);
+                setRecurringTransactions(prev => prev.map(item => item.id === id ? updated : item));
+                toast({ title: 'Success', description: 'Recurring transaction updated.' });
+            } else {
+                const newRec = await addRecurringTransaction(recurringData);
+                setRecurringTransactions(prev => [newRec, ...prev]);
+                toast({ title: 'Success', description: 'Recurring transaction added.' });
+            }
+            handleSheetClose();
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
+        }
+    });
+  }
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
@@ -76,6 +130,27 @@ export default function RecurringClient({ initialRecurringTransactions, categori
         return `On day ${item.dayOfMonth}`;
       }
       return item.frequency;
+  }
+
+  if (isLoading) {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-10 w-44" />
+            </div>
+            <Card>
+                <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
   }
 
   return (
@@ -97,6 +172,7 @@ export default function RecurringClient({ initialRecurringTransactions, categori
                     recurringTransaction={selected}
                     categories={categories}
                     onFinished={handleSheetClose}
+                    onFormSubmit={onFormSubmit}
                 />
             </SheetContent>
             </Sheet>
@@ -115,7 +191,7 @@ export default function RecurringClient({ initialRecurringTransactions, categori
                     <div className="col-span-2 text-right">Amount</div>
                     <div className="col-span-1"></div>
                 </div>
-                 {initialRecurringTransactions.map((item) => (
+                 {recurringTransactions.map((item) => (
                     <div key={item.id} className="grid grid-cols-2 md:grid-cols-12 items-center px-4 py-3 gap-y-2">
                         <div className="col-span-2 md:col-span-4 flex flex-col">
                             <span className="font-medium">{item.description}</span>
@@ -129,18 +205,19 @@ export default function RecurringClient({ initialRecurringTransactions, categori
                         <div className="md:col-span-1 text-right">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
                                     <span className="sr-only">Open menu</span>
                                     <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEdit(item)}>
+                                <DropdownMenuItem onClick={() => handleEdit(item)} disabled={isPending}>
                                     Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => handleDelete(item.id)}
+                                    disabled={isPending}
                                 >
                                     Delete
                                 </DropdownMenuItem>

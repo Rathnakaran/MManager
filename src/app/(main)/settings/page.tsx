@@ -40,7 +40,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { createUser, getUserByUsername, updateUserPassword, getUsers, updateUser } from '@/lib/actions';
+import { createUser, getUserById, updateUserPassword, getUsers, updateUser } from '@/lib/actions';
 import { Separator } from '@/components/ui/separator';
 import type { User } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -96,12 +96,15 @@ export default function SettingsPage() {
   const [isPending, startTransition] = useTransition();
 
   const fetchUsers = async () => {
-      const [fetchedUser, allFetchedUsers] = await Promise.all([
-          getUserByUsername('Rathnakaran'),
-          getUsers()
-      ]);
-      setCurrentUser(fetchedUser);
-      setAllUsers(allFetchedUsers);
+    const userId = localStorage.getItem('loggedInUserId');
+    if (!userId) return;
+
+    const [fetchedUser, allFetchedUsers] = await Promise.all([
+        getUserById(userId),
+        getUsers()
+    ]);
+    setCurrentUser(fetchedUser);
+    setAllUsers(allFetchedUsers);
   };
 
   useEffect(() => {
@@ -365,5 +368,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

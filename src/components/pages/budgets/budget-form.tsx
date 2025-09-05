@@ -32,7 +32,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface BudgetFormProps {
   budget?: Budget | null;
   onFinished: () => void;
-  onFormSubmit: (values: Omit<Budget, 'id'>, id?: string) => void;
+  onFormSubmit: (values: Omit<Budget, 'id' | 'userId'>, id?: string) => void;
 }
 
 export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetFormProps) {

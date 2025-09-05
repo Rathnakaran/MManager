@@ -25,7 +25,6 @@ const getGoalKeyword = (goalName: string) => {
 // --- User Actions ---
 export async function createUser(userData: Omit<User, 'id'>) {
     const usersCollection = collection(db, 'users');
-    // Check if username already exists
     const q = query(usersCollection, where('username', '==', userData.username));
     const snapshot = await getDocs(q);
     if (!snapshot.empty) {
@@ -34,7 +33,20 @@ export async function createUser(userData: Omit<User, 'id'>) {
     
     const newDocRef = await addDoc(usersCollection, userData);
     revalidatePath('/settings');
-    return { id: newDocRef.id, ...userData };
+    const newUser = { id: newDocRef.id, ...userData };
+
+    // Seed data for the new user
+    await seedInitialData(newUser.id);
+    return newUser;
+}
+
+export async function getUserById(userId: string): Promise<User | null> {
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+        return null;
+    }
+    return { id: userDoc.id, ...userDoc.data() } as User;
 }
 
 export async function getUserByUsername(username: string, password?: string): Promise<User | null> {
@@ -75,40 +87,38 @@ export async function updateUserPassword(userId: string, newPassword: string) {
 
 
 // --- Data Fetching ---
-export async function getData() {
+export async function getData(userId: string) {
   const [transactions, budgets, goals] = await Promise.all([
-    getTransactions(),
-    getBudgets(),
-    getGoals(),
+    getTransactions(userId),
+    getBudgets(userId),
+    getGoals(userId),
   ]);
   return { transactions, budgets, goals };
 }
 
-export async function getTransactions(): Promise<Transaction[]> {
-  const transactionsCollection = collection(db, 'transactions');
-  const q = query(transactionsCollection, orderBy('date', 'desc'));
+export async function getTransactions(userId: string): Promise<Transaction[]> {
+  const q = query(collection(db, 'transactions'), where('userId', '==', userId), orderBy('date', 'desc'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
 }
 
-export async function getBudgets(): Promise<Budget[]> {
-  const budgetsCollection = collection(db, 'budgets');
-  const snapshot = await getDocs(budgetsCollection);
+export async function getBudgets(userId: string): Promise<Budget[]> {
+  const q = query(collection(db, 'budgets'), where('userId', '==', userId));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Budget));
 }
 
-export async function getBudgetCategories(): Promise<string[]> {
-    const budgetsCollection = collection(db, 'budgets');
-    const snapshot = await getDocs(budgetsCollection);
-    return snapshot.docs.map(doc => doc.data().category as string);
+export async function getBudgetCategories(userId: string): Promise<string[]> {
+    const budgets = await getBudgets(userId);
+    return budgets.map(b => b.category);
 }
 
 // --- Transaction Actions ---
 export async function addTransaction(transactionData: Omit<Transaction, 'id'>): Promise<Transaction> {
   const newDocRef = await addDoc(collection(db, 'transactions'), transactionData);
-  
-  // Check if the transaction category is a goal contribution
-  const goals = await getGoals();
+  const newTransaction = { id: newDocRef.id, ...transactionData };
+
+  const goals = await getGoals(transactionData.userId);
   const goal = goals.find(g => getGoalKeyword(g.name) === transactionData.category);
 
   if (transactionData.type === 'expense' && goal) {
@@ -118,20 +128,14 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>): 
       });
   }
 
-  revalidatePath('/transactions');
-  revalidatePath('/dashboard');
-  revalidatePath('/goals');
-
-  const newTransaction = { id: newDocRef.id, ...transactionData };
+  revalidatePath('/');
   return newTransaction;
 }
 
 export async function updateTransaction(id: string, transactionData: Partial<Omit<Transaction, 'id'>>): Promise<Transaction> {
   const transactionRef = doc(db, 'transactions', id);
   await updateDoc(transactionRef, transactionData);
-  revalidatePath('/transactions');
-  revalidatePath('/dashboard');
-  revalidatePath('/goals');
+  revalidatePath('/');
   
   const updatedDoc = await getDoc(transactionRef);
   return { id: updatedDoc.id, ...updatedDoc.data() } as Transaction;
@@ -140,17 +144,14 @@ export async function updateTransaction(id: string, transactionData: Partial<Omi
 export async function deleteTransaction(id: string) {
   const transactionRef = doc(db, 'transactions', id);
   await deleteDoc(transactionRef);
-  revalidatePath('/transactions');
-  revalidatePath('/dashboard');
-  revalidatePath('/goals');
+  revalidatePath('/');
 }
 
 
 // --- Budget Actions ---
 export async function addBudget(budgetData: Omit<Budget, 'id'>): Promise<Budget> {
     const newDocRef = await addDoc(collection(db, 'budgets'), budgetData);
-    revalidatePath('/budgets');
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     const newBudget = { id: newDocRef.id, ...budgetData };
     return newBudget;
 }
@@ -158,8 +159,7 @@ export async function addBudget(budgetData: Omit<Budget, 'id'>): Promise<Budget>
 export async function updateBudget(id: string, budgetData: Partial<Omit<Budget, 'id'>>): Promise<Budget> {
     const budgetRef = doc(db, 'budgets', id);
     await updateDoc(budgetRef, budgetData);
-    revalidatePath('/budgets');
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     const updatedDoc = await getDoc(budgetRef);
     return { id: updatedDoc.id, ...updatedDoc.data() } as Budget;
 }
@@ -167,27 +167,24 @@ export async function updateBudget(id: string, budgetData: Partial<Omit<Budget, 
 export async function deleteBudget(id: string) {
     const budgetRef = doc(db, 'budgets', id);
     await deleteDoc(budgetRef);
-    revalidatePath('/budgets');
-    revalidatePath('/dashboard');
+    revalidatePath('/');
 }
 
 // --- Goal Actions ---
-export async function getGoals(): Promise<Goal[]> {
-  const goalsCollection = collection(db, 'goals');
-  const snapshot = await getDocs(goalsCollection);
+export async function getGoals(userId: string): Promise<Goal[]> {
+  const q = query(collection(db, 'goals'), where('userId', '==', userId));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Goal));
 }
 
-export async function getGoalCategories(): Promise<string[]> {
-    const goalsCollection = collection(db, 'goals');
-    const snapshot = await getDocs(goalsCollection);
-    return snapshot.docs.map(doc => getGoalKeyword(doc.data().name as string));
+export async function getGoalCategories(userId: string): Promise<string[]> {
+    const goals = await getGoals(userId);
+    return goals.map(doc => getGoalKeyword(doc.name as string));
 }
 
 export async function addGoal(goalData: Omit<Goal, 'id'>): Promise<Goal> {
   const newGoalRef = await addDoc(collection(db, 'goals'), goalData);
-  revalidatePath('/goals');
-  revalidatePath('/dashboard');
+  revalidatePath('/');
   const newGoal = { id: newGoalRef.id, ...goalData };
   return newGoal;
 }
@@ -195,8 +192,7 @@ export async function addGoal(goalData: Omit<Goal, 'id'>): Promise<Goal> {
 export async function updateGoal(id: string, goalData: Partial<Goal>): Promise<Goal> {
   const goalRef = doc(db, 'goals', id);
   await updateDoc(goalRef, goalData);
-  revalidatePath('/goals');
-  revalidatePath('/dashboard');
+  revalidatePath('/');
   const updatedDoc = await getDoc(goalRef);
   return { id: updatedDoc.id, ...updatedDoc.data() } as Goal;
 }
@@ -204,17 +200,16 @@ export async function updateGoal(id: string, goalData: Partial<Goal>): Promise<G
 export async function deleteGoal(id: string) {
   const goalRef = doc(db, 'goals', id);
   await deleteDoc(goalRef);
-  revalidatePath('/goals');
-  revalidatePath('/dashboard');
+  revalidatePath('/');
   return { success: true };
 }
 
-export async function importTransactions(data: any[]) {
+export async function importTransactions(userId: string, data: any[]): Promise<Transaction[]> {
     const batch = writeBatch(db);
     const transactionsCollection = collection(db, 'transactions');
-    let count = 0;
+    const newTransactions: Transaction[] = [];
 
-    const goals = await getGoals();
+    const goals = await getGoals(userId);
 
     for (const row of data) {
         if (!row.Date || !row.Description || !row.Amount || !row.Category) continue;
@@ -223,6 +218,7 @@ export async function importTransactions(data: any[]) {
         const type = parseFloat(row.Amount) >= 0 ? 'income' : 'expense';
 
         const transactionData: Omit<Transaction, 'id'> = {
+            userId,
             date: new Date(row.Date).toISOString(),
             description: row.Description,
             amount: Math.abs(amount),
@@ -232,6 +228,7 @@ export async function importTransactions(data: any[]) {
         
         const docRef = doc(transactionsCollection);
         batch.set(docRef, transactionData);
+        newTransactions.push({ id: docRef.id, ...transactionData });
         
         if (transactionData.type === 'expense') {
             const goal = goals.find(g => getGoalKeyword(g.name) === transactionData.category);
@@ -239,41 +236,39 @@ export async function importTransactions(data: any[]) {
                 const goalRef = doc(db, 'goals', goal.id);
                 const newCurrentAmount = goal.currentAmount + transactionData.amount;
                 batch.update(goalRef, { currentAmount: newCurrentAmount });
-                // Update goal in local array to handle multiple contributions to same goal in one import
                 goal.currentAmount = newCurrentAmount;
             }
         }
-        
-        count++;
     }
     
-    if (count > 0) {
+    if (newTransactions.length > 0) {
       await batch.commit();
-      revalidatePath('/transactions');
-      revalidatePath('/dashboard');
-      revalidatePath('/goals');
+      revalidatePath('/');
     }
+
+    return newTransactions;
 }
 
 
 // --- Recurring Transaction Actions ---
-export async function getRecurringTransactions(): Promise<RecurringTransaction[]> {
-  const recurringCollection = collection(db, 'recurring');
-  const snapshot = await getDocs(recurringCollection);
+export async function getRecurringTransactions(userId: string): Promise<RecurringTransaction[]> {
+  const q = query(collection(db, 'recurring'), where('userId', '==', userId));
+  const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecurringTransaction));
 }
 
-export async function addRecurringTransaction(recTransactionData: Omit<RecurringTransaction, 'id'>) {
+export async function addRecurringTransaction(recTransactionData: Omit<RecurringTransaction, 'id'>): Promise<RecurringTransaction> {
     const newRecRef = await addDoc(collection(db, 'recurring'), recTransactionData);
     revalidatePath('/recurring');
-    return { success: true, transaction: {id: newRecRef.id, ...recTransactionData} };
+    return {id: newRecRef.id, ...recTransactionData};
 }
 
-export async function updateRecurringTransaction(id: string, recTransactionData: Partial<RecurringTransaction>) {
+export async function updateRecurringTransaction(id: string, recTransactionData: Partial<RecurringTransaction>): Promise<RecurringTransaction> {
     const recRef = doc(db, 'recurring', id);
     await updateDoc(recRef, recTransactionData);
     revalidatePath('/recurring');
-    return { success: true, transaction: {id, ...recTransactionData} };
+    const updatedDoc = await getDoc(recRef);
+    return { id: updatedDoc.id, ...updatedDoc.data() } as RecurringTransaction;
 }
 
 export async function deleteRecurringTransaction(id: string) {
@@ -283,4 +278,37 @@ export async function deleteRecurringTransaction(id: string) {
     return { success: true };
 }
 
-    
+
+// --- Seeding ---
+import { sampleBudgets, sampleGoals, sampleTransactions, sampleRecurringTransactions } from './seed-data';
+
+export async function seedInitialData(userId: string) {
+  const batch = writeBatch(db);
+
+  const budgetsCol = collection(db, 'budgets');
+  sampleBudgets.forEach(budget => {
+    const docRef = doc(budgetsCol);
+    batch.set(docRef, { ...budget, userId });
+  });
+
+  const goalsCol = collection(db, 'goals');
+  sampleGoals.forEach(goal => {
+    const docRef = doc(goalsCol);
+    batch.set(docRef, { ...goal, userId });
+  });
+
+  const transactionsCol = collection(db, 'transactions');
+  sampleTransactions.forEach(transaction => {
+    const docRef = doc(transactionsCol);
+    batch.set(docRef, { ...transaction, userId });
+  });
+
+  const recurringCol = collection(db, 'recurring');
+  sampleRecurringTransactions.forEach(rec => {
+    const docRef = doc(recurringCol);
+    batch.set(docRef, { ...rec, userId });
+  });
+
+  await batch.commit();
+  console.log(`Initial data seeded for user ${userId}`);
+}

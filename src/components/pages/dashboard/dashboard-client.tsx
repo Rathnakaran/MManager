@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import type { Transaction, Budget, Goal } from '@/types';
 import { StatCards } from './stat-cards';
 import { ExpenseChart } from './charts';
@@ -15,12 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { getData } from '@/lib/actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface DashboardClientProps {
-  transactions: Transaction[];
-  budgets: Budget[];
-  goals: Goal[];
-}
+interface DashboardClientProps {}
 
 const welcomeMessages = [
   "Welcome Back, Boss!",
@@ -36,19 +35,38 @@ const getCurrentMonthValue = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
-export default function DashboardClient({
-  transactions,
-  budgets,
-  goals,
-}: DashboardClientProps) {
+export default function DashboardClient({}: DashboardClientProps) {
   const [welcomeMessage, setWelcomeMessage] = useState(welcomeMessages[0]);
   const [view, setView] = useState<string>(getCurrentMonthValue());
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
 
   useEffect(() => {
+    const userId = localStorage.getItem('loggedInUserId');
+    if (!userId) return;
+
+    setIsLoading(true);
+    getData(userId)
+      .then(({ transactions, budgets, goals }) => {
+        setTransactions(transactions);
+        setBudgets(budgets);
+        setGoals(goals);
+      })
+      .catch(() => {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to load dashboard data.' });
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+    
     // This runs only on the client, after the initial render, to avoid hydration mismatch
     const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
     setWelcomeMessage(welcomeMessages[randomIndex]);
-  }, []);
+  }, [toast]);
 
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
@@ -91,11 +109,9 @@ export default function DashboardClient({
 
   const { totalBudget, remainingBudget } = useMemo(() => {
     const isYearly = view === 'yearly';
-    const multiplier = isYearly ? 12 : 1;
     
-    // For yearly view, sum up all monthly budgets and multiply by 12.
-    // For monthly view, it's just the sum of monthly budgets.
-    const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0) * multiplier;
+    const relevantBudgets = budgets.reduce((sum, b) => sum + b.amount, 0);
+    const totalBudget = isYearly ? relevantBudgets * 12 : relevantBudgets;
     
     const remainingBudget = totalBudget - totalSpent;
     return { totalBudget, remainingBudget };
@@ -105,6 +121,28 @@ export default function DashboardClient({
     const [year, month] = monthStr.split('-');
     return new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
   };
+
+  if (isLoading) {
+      return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-10 w-[220px]" />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+            </div>
+            <Skeleton className="h-24" />
+            <Skeleton className="h-48" />
+            <div className="grid gap-6 lg:grid-cols-5">
+                <Skeleton className="lg:col-span-3 h-[450px]" />
+                <Skeleton className="lg:col-span-2 h-[450px]" />
+            </div>
+        </div>
+      )
+  }
 
   return (
     <div className="space-y-6">
