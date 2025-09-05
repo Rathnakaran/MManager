@@ -197,11 +197,11 @@ export default function DashboardClient({}: DashboardClientProps) {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <GoalProgress goals={goals} />
         <BudgetStatus transactions={filteredTransactions} budgets={budgets} view={view} />
+        <ExpenseChart expenseBreakdown={expenseBreakdown} />
       </div>
 
-      <ExpenseChart expenseBreakdown={expenseBreakdown} />
+      <GoalProgress goals={goals} />
     </div>
   );
 }
