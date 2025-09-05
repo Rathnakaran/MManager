@@ -37,11 +37,11 @@ export function BudgetStatus({ transactions, budgets, view }: BudgetStatusProps)
 
   const periodText = useMemo(() => {
     if (view === 'yearly') {
-        return `How is your spending for the year ${new Date().getFullYear()}?`;
+        return `Annual budget status for ${new Date().getFullYear()}.`;
     }
     const [year, month] = view.split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1);
-    return `Are you a king or a beggar this ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}?`;
+    return `Monthly budget status for ${date.toLocaleString('default', { month: 'long' })} ${date.getFullYear()}.`;
   }, [view]);
 
   return (

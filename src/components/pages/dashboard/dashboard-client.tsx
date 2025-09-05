@@ -49,7 +49,10 @@ export default function DashboardClient({}: DashboardClientProps) {
   useEffect(() => {
     const fetchData = async () => {
         const userId = await getUserIdFromCookie();
-        if (!userId) return;
+        if (!userId) {
+            setIsLoading(false); // Stop loading if no user
+            return;
+        };
 
         setIsLoading(true);
         getData(userId)
@@ -125,16 +128,18 @@ export default function DashboardClient({}: DashboardClientProps) {
   const advisorData = useMemo(() => {
     const currentMonth = getCurrentMonthValue();
     
-    const monthlyTotalSpent = transactions
-      .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
+    const monthlyTransactions = transactions.filter(t => t.date.startsWith(currentMonth));
+    
+    const monthlyTotalSpent = monthlyTransactions
+      .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const monthlyTotalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
     const monthlyRemainingBudget = monthlyTotalBudget - monthlyTotalSpent;
     
     const monthlyExpenseBreakdown: Record<string, number> = {};
-    transactions
-      .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
+    monthlyTransactions
+      .filter(t => t.type === 'expense')
       .forEach(t => {
           if (!monthlyExpenseBreakdown[t.category]) {
               monthlyExpenseBreakdown[t.category] = 0;

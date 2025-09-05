@@ -33,6 +33,10 @@ const transactionTitles = [
     "Every Rupee tells a story",
 ];
 
+const sortTransactions = (transactions: Transaction[]) => {
+    return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
 export default function TransactionsClient({}: TransactionsClientProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<{ budgetCategories: string[], goalCategories: string[] }>({ budgetCategories: [], goalCategories: [] });
@@ -43,32 +47,33 @@ export default function TransactionsClient({}: TransactionsClientProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   
-  useEffect(() => {
-    const fetchData = async () => {
-        const userId = await getUserIdFromCookie();
-        if (!userId) return;
-
-        setIsLoading(true);
-        try {
-            const [transactionsData, budgetCats, goalCats] = await Promise.all([
-                getTransactions(userId),
-                getBudgetCategories(userId),
-                getGoalCategories(userId)
-            ]);
-            // Sort transactions by date client-side
-            const sortedTransactions = transactionsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setTransactions(sortedTransactions);
-            setCategories({ budgetCategories: budgetCats, goalCategories: goalCats });
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transaction data.' });
-        } finally {
-            setIsLoading(false);
-        }
+  const fetchData = async () => {
+    const userId = await getUserIdFromCookie();
+    if (!userId) {
+        setIsLoading(false);
+        return;
     };
-    
+
+    setIsLoading(true);
+    try {
+        const [transactionsData, budgetCats, goalCats] = await Promise.all([
+            getTransactions(userId),
+            getBudgetCategories(userId),
+            getGoalCategories(userId)
+        ]);
+        setTransactions(sortTransactions(transactionsData));
+        setCategories({ budgetCategories: budgetCats, goalCategories: goalCats });
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transaction data.' });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
     setTitle(transactionTitles[Math.floor(Math.random() * transactionTitles.length)]);
-  }, [toast]);
+  }, []);
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -112,17 +117,11 @@ export default function TransactionsClient({}: TransactionsClientProps) {
       try {
         if (id) {
           const updatedTransaction = await updateTransaction(id, transactionData);
-          setTransactions(prev => {
-            const newT = prev.map(t => t.id === id ? updatedTransaction : t);
-            return newT.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          });
+          setTransactions(prev => sortTransactions(prev.map(t => t.id === id ? updatedTransaction : t)));
           toast({ title: 'Success', description: 'Transaction updated successfully.' });
         } else {
           const newTransaction = await addTransaction(transactionData);
-          setTransactions(prev => {
-            const newT = [newTransaction, ...prev];
-            return newT.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          });
+          setTransactions(prev => sortTransactions([newTransaction, ...prev]));
           toast({ title: 'Success', description: 'Transaction added successfully.' });
         }
         handleSheetClose();
@@ -146,8 +145,9 @@ export default function TransactionsClient({}: TransactionsClientProps) {
             skipEmptyLines: true,
             complete: async (results) => {
               try {
-                const newTransactions = await importTransactions(userId, results.data);
-                setTransactions(prev => [...newTransactions, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+                // The action already revalidates the path, so we can just refetch
+                await importTransactions(userId, results.data);
+                await fetchData();
                 toast({
                   title: "Import Successful",
                   description: `${results.data.length} transactions have been imported.`,
@@ -156,10 +156,17 @@ export default function TransactionsClient({}: TransactionsClientProps) {
                 toast({
                   variant: "destructive",
                   title: "Import Failed",
-                  description: "Could not import transactions.",
+                  description: "Could not import transactions. Please check the file format.",
                 });
               }
             },
+            error: () => {
+                toast({
+                    variant: "destructive",
+                    title: "Import Error",
+                    description: "Failed to parse the CSV file.",
+                });
+            }
           });
     });
   };
