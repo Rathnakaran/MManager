@@ -284,14 +284,6 @@ export async function deleteRecurringTransaction(id: string) {
 
 // --- Seeding ---
 export async function seedInitialData(userId: string) {
-  const batch = writeBatch(db);
-
-  const budgetsCol = collection(db, 'budgets');
-  sampleBudgets.forEach(budget => {
-    const docRef = doc(budgetsCol);
-    batch.set(docRef, { ...budget, userId });
-  });
-
-  await batch.commit();
-  console.log(`Initial budget categories seeded for user ${userId}`);
+  // This function is now empty to ensure new users start with a clean slate.
+  console.log(`New user created with ID: ${userId}. No sample data seeded.`);
 }
