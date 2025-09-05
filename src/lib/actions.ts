@@ -313,5 +313,3 @@ export async function seedInitialData(userId: string) {
   await batch.commit();
   console.log(`Initial data seeded for user ${userId}`);
 }
-
-
