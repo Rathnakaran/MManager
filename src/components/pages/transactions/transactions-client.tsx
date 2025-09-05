@@ -54,7 +54,9 @@ export default function TransactionsClient({}: TransactionsClientProps) {
                 getBudgetCategories(userId),
                 getGoalCategories(userId)
             ]);
-            setTransactions(transactionsData);
+            // Sort transactions by date client-side
+            const sortedTransactions = transactionsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            setTransactions(sortedTransactions);
             setCategories({ budgetCategories: budgetCats, goalCategories: goalCats });
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transaction data.' });
@@ -109,11 +111,17 @@ export default function TransactionsClient({}: TransactionsClientProps) {
       try {
         if (id) {
           const updatedTransaction = await updateTransaction(id, transactionData);
-          setTransactions(prev => prev.map(t => t.id === id ? updatedTransaction : t));
+          setTransactions(prev => {
+            const newT = prev.map(t => t.id === id ? updatedTransaction : t);
+            return newT.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          });
           toast({ title: 'Success', description: 'Transaction updated successfully.' });
         } else {
           const newTransaction = await addTransaction(transactionData);
-          setTransactions(prev => [newTransaction, ...prev]);
+          setTransactions(prev => {
+            const newT = [newTransaction, ...prev];
+            return newT.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          });
           toast({ title: 'Success', description: 'Transaction added successfully.' });
         }
         handleSheetClose();
@@ -136,7 +144,7 @@ export default function TransactionsClient({}: TransactionsClientProps) {
             complete: async (results) => {
               try {
                 const newTransactions = await importTransactions(userId, results.data);
-                setTransactions(prev => [...newTransactions, ...prev]);
+                setTransactions(prev => [...newTransactions, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
                 toast({
                   title: "Import Successful",
                   description: `${results.data.length} transactions have been imported.`,

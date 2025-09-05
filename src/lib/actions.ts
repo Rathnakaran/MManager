@@ -100,7 +100,7 @@ export async function getData(userId: string) {
 }
 
 export async function getTransactions(userId: string): Promise<Transaction[]> {
-  const q = query(collection(db, 'transactions'), where('userId', '==', userId), orderBy('date', 'desc'));
+  const q = query(collection(db, 'transactions'), where('userId', '==', userId));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
 }
@@ -313,4 +313,5 @@ export async function seedInitialData(userId: string) {
   await batch.commit();
   console.log(`Initial data seeded for user ${userId}`);
 }
+
 
