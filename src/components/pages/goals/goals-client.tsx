@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import GoalForm from './goal-form';
-import { Skeleton } from '@/components/ui/skeleton';
+import AppLoader from '@/components/layout/app-loader';
 
 interface GoalsClientProps {}
 
@@ -117,16 +117,8 @@ export default function GoalsClient({}: GoalsClientProps) {
 
   if (isLoading) {
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <Skeleton className="h-8 w-1/3" />
-                <Skeleton className="h-10 w-32" />
-            </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Skeleton className="h-48" />
-                <Skeleton className="h-48" />
-                <Skeleton className="h-48" />
-            </div>
+        <div className="fixed inset-0 bg-background z-50">
+            <AppLoader />
         </div>
     )
   }

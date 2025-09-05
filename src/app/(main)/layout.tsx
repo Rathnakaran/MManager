@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/app-header';
 import AppSidebar from '@/components/layout/app-sidebar';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Skeleton } from '@/components/ui/skeleton';
+import AppLoader from '@/components/layout/app-loader';
 
 export default function MainLayout({
   children,
@@ -25,15 +25,7 @@ export default function MainLayout({
   }, [router]);
 
   if (!isAuthenticated) {
-    return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="space-y-4 w-1/2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
-            </div>
-        </div>
-    );
+    return <AppLoader />;
   }
 
   return (

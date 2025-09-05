@@ -30,7 +30,7 @@ import {
     getRecurringTransactions, 
     getBudgetCategories 
 } from '@/lib/actions';
-import { Skeleton } from '@/components/ui/skeleton';
+import AppLoader from '@/components/layout/app-loader';
 
 
 interface RecurringClientProps {}
@@ -134,21 +134,8 @@ export default function RecurringClient({}: RecurringClientProps) {
 
   if (isLoading) {
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <Skeleton className="h-8 w-1/3" />
-                <Skeleton className="h-10 w-44" />
-            </div>
-            <Card>
-                <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                    </div>
-                </CardContent>
-            </Card>
+        <div className="fixed inset-0 bg-background z-50">
+            <AppLoader />
         </div>
     )
   }

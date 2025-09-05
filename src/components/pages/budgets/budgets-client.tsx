@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import BudgetForm from './budget-form';
-import { Skeleton } from '@/components/ui/skeleton';
+import AppLoader from '@/components/layout/app-loader';
 
 const budgetTitles = [
     "The Budgeting Battlefield",
@@ -164,21 +164,8 @@ export default function BudgetsClient() {
   
   if (isLoading) {
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <Skeleton className="h-8 w-1/3" />
-                <Skeleton className="h-10 w-44" />
-            </div>
-            <Card>
-                <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                    </div>
-                </CardContent>
-            </Card>
+        <div className="fixed inset-0 bg-background z-50">
+            <AppLoader />
         </div>
     );
   }

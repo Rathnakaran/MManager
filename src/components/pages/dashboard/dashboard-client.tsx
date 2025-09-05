@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { getData } from '@/lib/actions';
-import { Skeleton } from '@/components/ui/skeleton';
+import AppLoader from '@/components/layout/app-loader';
 
 interface DashboardClientProps {}
 
@@ -126,22 +126,8 @@ export default function DashboardClient({}: DashboardClientProps) {
 
   if (isLoading) {
       return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <Skeleton className="h-8 w-1/3" />
-                <Skeleton className="h-10 w-[220px]" />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Skeleton className="h-28" />
-                <Skeleton className="h-28" />
-                <Skeleton className="h-28" />
-            </div>
-            <Skeleton className="h-24" />
-            <Skeleton className="h-48" />
-            <div className="grid gap-6 lg:grid-cols-5">
-                <Skeleton className="lg:col-span-3 h-[450px]" />
-                <Skeleton className="lg:col-span-2 h-[450px]" />
-            </div>
+        <div className="fixed inset-0 bg-background z-50">
+            <AppLoader />
         </div>
       )
   }
@@ -191,4 +177,3 @@ export default function DashboardClient({}: DashboardClientProps) {
     </div>
   );
 }
-
