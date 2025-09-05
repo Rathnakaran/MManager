@@ -22,7 +22,7 @@ const getGoalKeyword = (goalName: string) => {
 }
 
 // --- User Actions ---
-export async function createUser(userData: Omit<User, 'id' | 'account_type'>) {
+export async function createUser(userData: Omit<User, 'id'>) {
     const usersCollection = collection(db, 'users');
     const q = query(usersCollection, where('username', '==', userData.username));
     const snapshot = await getDocs(q);
@@ -30,9 +30,8 @@ export async function createUser(userData: Omit<User, 'id' | 'account_type'>) {
         throw new Error('Username already exists');
     }
     
-    const userWithRole = { ...userData, account_type: 'user' as const };
-    const newDocRef = await addDoc(usersCollection, userWithRole);
-    const newUser = { id: newDocRef.id, ...userWithRole };
+    const newDocRef = await addDoc(usersCollection, userData);
+    const newUser = { id: newDocRef.id, ...userData };
 
     await seedInitialData(newUser.id);
 

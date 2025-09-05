@@ -56,6 +56,7 @@ import { Separator } from '@/components/ui/separator';
 import type { User } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const tamilQuotes = [
@@ -72,6 +73,7 @@ const createUserFormSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   dateOfBirth: z.date({ required_error: 'Date of birth is required.' }),
   name: z.string().min(2, { message: 'Name is required.' }),
+  account_type: z.enum(['user', 'admin'], { required_error: 'Account type is required.' }),
 });
 
 type CreateUserFormValues = z.infer<typeof createUserFormSchema>;
@@ -128,7 +130,7 @@ export default function SettingsPage() {
 
   const createUserForm = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserFormSchema),
-    defaultValues: { username: '', email: '', password: '', name: '' },
+    defaultValues: { username: '', email: '', password: '', name: '', account_type: 'user' },
   });
 
   const editUserForm = useForm<EditUserFormValues>({
@@ -328,6 +330,23 @@ export default function SettingsPage() {
                                     <FormField control={createUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="user@example.com" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                                     <FormField control={createUserForm.control} name="password" render={({ field }) => (<FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                                     <FormField control={createUserForm.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col pt-2"><FormLabel>Date of Birth</FormLabel><Popover open={isCreateCalendarOpen} onOpenChange={setIsCreateCalendarOpen}><PopoverTrigger asChild><FormControl><Button variant={'outline'} className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={(date) => {field.onChange(date); setIsCreateCalendarOpen(false);}} captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
+                                    <FormField control={createUserForm.control} name="account_type" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Account Type</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select an account type" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="user">User</SelectItem>
+                                                    <SelectItem value="admin">Admin</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
                                     <DialogFooter className='pt-4'>
                                         <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
                                         <Button type="submit" disabled={isPending}>{isPending ? 'Creating...' : 'Create User'}</Button>
