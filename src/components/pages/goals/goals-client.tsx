@@ -111,6 +111,7 @@ export default function GoalsClient({}: GoalsClientProps) {
             }
             handleSheetClose();
         } catch (error) {
+            console.error("Goal submission error:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Something went wrong.' });
         }
     });

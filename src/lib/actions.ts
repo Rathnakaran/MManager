@@ -51,7 +51,7 @@ export async function createUser(userData: Omit<User, 'id'> & {dateOfBirth: Date
 
     const userDataWithDateString = {
         ...userData,
-        dateOfBirth: format(userData.dateOfBirth, 'yyyy-MM-dd'),
+        dateOfBirth: toDateString(userData.dateOfBirth),
     }
     
     const newDocRef = await addDoc(usersCollection, userDataWithDateString);
@@ -104,8 +104,12 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth' | 'photoURL'>>) {
+    const dataToUpdate: any = { ...userData };
+    if (userData.dateOfBirth && typeof userData.dateOfBirth !== 'string') {
+        dataToUpdate.dateOfBirth = toDateString(new Date(userData.dateOfBirth));
+    }
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, userData);
+    await updateDoc(userRef, dataToUpdate);
     revalidatePath('/settings');
     revalidatePath('/(main)/layout');
     return { success: true };
@@ -249,24 +253,16 @@ export async function getGoalCategories(userId: string): Promise<string[]> {
     return goals.map(doc => getGoalKeyword(doc.name as string));
 }
 
-export async function addGoal(goalData: Omit<Goal, 'id' | 'targetDate'> & {targetDate: Date}): Promise<Goal> {
-  const dataWithDateString = {
-    ...goalData,
-    targetDate: toDateString(goalData.targetDate),
-  };
-  const newGoalRef = await addDoc(collection(db, 'goals'), dataWithDateString);
+export async function addGoal(goalData: Omit<Goal, 'id'>): Promise<Goal> {
+  const newGoalRef = await addDoc(collection(db, 'goals'), goalData);
   revalidatePath('/');
-  const newGoal = { id: newGoalRef.id, ...dataWithDateString };
+  const newGoal = { id: newGoalRef.id, ...goalData };
   return newGoal;
 }
 
-export async function updateGoal(id: string, goalData: Partial<Omit<Goal, 'id' | 'targetDate'>> & {targetDate?: Date}): Promise<Goal> {
-  const dataToUpdate: any = { ...goalData };
-  if(goalData.targetDate) {
-    dataToUpdate.targetDate = toDateString(goalData.targetDate);
-  }
+export async function updateGoal(id: string, goalData: Partial<Omit<Goal, 'id'>>): Promise<Goal> {
   const goalRef = doc(db, 'goals', id);
-  await updateDoc(goalRef, dataToUpdate);
+  await updateDoc(goalRef, goalData);
   revalidatePath('/');
   const updatedDoc = await getDoc(goalRef);
   return { id: updatedDoc.id, ...updatedDoc.data() } as Goal;
@@ -359,5 +355,3 @@ export async function seedInitialData(userId: string) {
   // This function is now empty to ensure new users start with a clean slate.
   console.log(`New user created with ID: ${userId}. No sample data seeded.`);
 }
-
-    

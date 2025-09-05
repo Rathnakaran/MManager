@@ -228,12 +228,7 @@ export default function SettingsPage() {
     if (!selectedUser) return;
     startTransition(async () => {
       try {
-        const userData = {
-            name: values.name,
-            email: values.email,
-            dateOfBirth: format(values.dateOfBirth, 'yyyy-MM-dd'),
-        }
-        await updateUser(selectedUser.id, userData);
+        await updateUser(selectedUser.id, values);
         await fetchUsers();
         toast({
           title: 'Success!',
@@ -252,7 +247,7 @@ export default function SettingsPage() {
   
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
-    editUserForm.reset({ name: user.name, email: user.email, dateOfBirth: new Date(user.dateOfBirth) });
+    editUserForm.reset({ name: user.name, email: user.email, dateOfBirth: new Date(user.dateOfBirth + 'T00:00:00Z') });
     setIsEditUserOpen(true);
   }
 
