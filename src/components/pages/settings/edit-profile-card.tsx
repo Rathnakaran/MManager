@@ -1,8 +1,7 @@
 
 'use client';
 
-import * as React from 'react';
-import { useState, useTransition, ChangeEvent } from 'react';
+import React, { useState, useTransition, ChangeEvent } from 'react';
 import {
   Card,
   CardContent,
