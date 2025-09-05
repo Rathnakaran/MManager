@@ -46,4 +46,5 @@ export interface User {
   password?: string; // Should be hashed
   dateOfBirth: string; // ISO 8601 format
   account_type: 'admin' | 'user';
+  photoURL?: string; // Data URL for profile picture
 }

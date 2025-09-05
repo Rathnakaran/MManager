@@ -58,7 +58,7 @@ export default function AppHeader() {
             className="overflow-hidden rounded-full"
           >
             <Avatar>
-              <AvatarImage src={`https://picsum.photos/seed/${user?.id}/32/32`} alt={user?.name || 'User'} data-ai-hint="person face" />
+              <AvatarImage src={user?.photoURL || `https://picsum.photos/seed/${user?.id}/32/32`} alt={user?.name || 'User'} data-ai-hint="person face" />
               <AvatarFallback>{user ? getInitials(user.name) : 'U'}</AvatarFallback>
             </Avatar>
           </Button>

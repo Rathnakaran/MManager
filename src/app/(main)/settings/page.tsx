@@ -8,13 +8,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, UserPlus, KeyRound, UserCog, Edit, Users, Trash2 } from 'lucide-react';
+import { CalendarIcon, UserPlus, KeyRound, Edit, Users, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -55,8 +53,10 @@ import { createUser, getUserById, updateUserPassword, getUsers, updateUser, dele
 import { Separator } from '@/components/ui/separator';
 import type { User } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import EditProfileCard from '@/components/pages/settings/edit-profile-card';
+import AppLoader from '@/components/layout/app-loader';
 
 
 const tamilQuotes = [
@@ -141,13 +141,6 @@ export default function SettingsPage() {
     resolver: zodResolver(changePasswordFormSchema),
     defaultValues: { newPassword: '', confirmPassword: '' },
   });
-
-  const handleProfileUpdate = () => {
-    toast({
-      title: 'Success!',
-      description: 'Your changes have been saved. "Katham Katham... Mudinjadhu Mudinju Potum!"',
-    });
-  };
 
   const onChangePasswordSubmit = (values: ChangePasswordFormValues) => {
     if (!selectedUser) return;
@@ -256,7 +249,7 @@ export default function SettingsPage() {
   }
 
   if (!currentUser) {
-    return <div>Loading user profile...</div>; // Or a skeleton loader
+    return <AppLoader />;
   }
 
   const isAdmin = currentUser.account_type === 'admin';
@@ -268,38 +261,11 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground italic text-center sm:text-right">"{quote}"</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><UserCog /> My Profile</CardTitle>
-          <CardDescription>
-            This is your personal information.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" defaultValue={currentUser.name} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue={currentUser.email} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dob">Date of Birth</Label>
-               <Input id="dob" disabled value={format(new Date(currentUser.dateOfBirth), 'PPP')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" defaultValue={currentUser.username} disabled />
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-            <Button variant="secondary" onClick={() => openPasswordDialog(currentUser)}><KeyRound className="mr-2"/> Change My Password</Button>
-            <Button onClick={handleProfileUpdate}>Save My Profile</Button>
-        </CardFooter>
-      </Card>
+      <EditProfileCard 
+        currentUser={currentUser}
+        onPasswordChangeClick={() => openPasswordDialog(currentUser)}
+        onProfileUpdate={fetchUsers}
+      />
       
       {isAdmin && (
         <>
@@ -361,7 +327,8 @@ export default function SettingsPage() {
                         <Card key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-4">
                                 <Avatar>
-                                <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                                    <AvatarImage src={user.photoURL || undefined} alt={user.name} />
+                                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <div className="font-semibold flex items-center gap-2">
@@ -450,7 +417,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
-
-    

@@ -75,10 +75,11 @@ export async function getUsers(): Promise<User[]> {
     });
 }
 
-export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth'>>) {
+export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth' | 'photoURL'>>) {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, userData);
     revalidatePath('/settings');
+    revalidatePath('/(main)/layout');
     return { success: true };
 }
 
