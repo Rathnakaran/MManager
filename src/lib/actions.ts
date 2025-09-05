@@ -17,7 +17,7 @@ import {
   where,
 } from 'firebase/firestore';
 import type { Transaction, Budget, Goal, RecurringTransaction, User } from '@/types';
-import { sampleBudgets, sampleGoals, sampleTransactions, sampleRecurringTransactions } from './seed-data';
+import { sampleBudgets } from './seed-data';
 
 const getGoalKeyword = (goalName: string) => {
     return goalName.split(' ')[0];
@@ -292,24 +292,6 @@ export async function seedInitialData(userId: string) {
     batch.set(docRef, { ...budget, userId });
   });
 
-  const goalsCol = collection(db, 'goals');
-  sampleGoals.forEach(goal => {
-    const docRef = doc(goalsCol);
-    batch.set(docRef, { ...goal, userId });
-  });
-
-  const transactionsCol = collection(db, 'transactions');
-  sampleTransactions.forEach(transaction => {
-    const docRef = doc(transactionsCol);
-    batch.set(docRef, { ...transaction, userId });
-  });
-
-  const recurringCol = collection(db, 'recurring');
-  sampleRecurringTransactions.forEach(rec => {
-    const docRef = doc(recurringCol);
-    batch.set(docRef, { ...rec, userId });
-  });
-
   await batch.commit();
-  console.log(`Initial data seeded for user ${userId}`);
+  console.log(`Initial budget categories seeded for user ${userId}`);
 }
