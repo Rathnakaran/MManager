@@ -15,10 +15,21 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import type { User } from '@/types';
+import { getUserById } from '@/lib/actions';
 
 export default function AppHeader() {
   const router = useRouter();
   const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('loggedInUserId');
+    if (userId) {
+      getUserById(userId).then(setUser);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('loggedInUserId');
@@ -28,6 +39,10 @@ export default function AppHeader() {
     });
     router.push('/login');
   };
+  
+  const getInitials = (name: string = '') => {
+    return name.charAt(0).toUpperCase();
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -43,13 +58,13 @@ export default function AppHeader() {
             className="overflow-hidden rounded-full"
           >
             <Avatar>
-              <AvatarImage src="https://picsum.photos/32/32" alt="User" data-ai-hint="person face" />
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarImage src={`https://picsum.photos/seed/${user?.id}/32/32`} alt={user?.name || 'User'} data-ai-hint="person face" />
+              <AvatarFallback>{user ? getInitials(user.name) : 'U'}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>{user ? user.name : 'My Account'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href="/settings">Settings</Link>
