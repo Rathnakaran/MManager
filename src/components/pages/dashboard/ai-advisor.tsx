@@ -41,9 +41,9 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
       } catch (error: any) {
         console.error('Failed to get financial advice:', error);
         if (error.message && error.message.includes('503 Service Unavailable')) {
-          setError('The AI Advisor is currently busy. Please try again in a moment.');
+          setError('The AI Advisor is currently busy. "Konjam porunga, thalaiva!" Please try again.');
         } else {
-          setError('Could not load financial advice. You may have hit the daily free tier limit.');
+          setError('The AI has gone to sleep for the day! (Daily free tier limit reached). Please try again tomorrow.');
         }
         setAdvice(null);
       } finally {
