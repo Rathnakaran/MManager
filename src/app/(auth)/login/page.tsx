@@ -198,7 +198,7 @@ export default function LoginPage() {
                     <p className='font-bold text-lg'>Rathnakaran M</p>
                     <p className='text-sm text-muted-foreground'>rathnakaran480@gmail.com</p>
                     <p className='text-xs italic pt-4'>
-                        "Creativity is intelligence having fun." - Albert Einstein
+                        "En vazhi, thani vazhi." - Superstar Rajinikanth
                     </p>
                 </div>
             </DialogContent>
