@@ -125,7 +125,10 @@ const iconMap: Record<string, LucideIcon> = {
   KeyRound,
 };
 
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export const getIconByName = (name: string): LucideIcon => {
-  const Icon = iconMap[name];
+  const capitalizedName = capitalize(name);
+  const Icon = iconMap[capitalizedName];
   return Icon || CircleDollarSign;
 };
