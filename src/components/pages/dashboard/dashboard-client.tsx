@@ -14,12 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { getData, getUserIdFromCookie } from '@/lib/actions';
-import AppLoader from '@/components/layout/app-loader';
 import { ExpenseChart } from './expense-chart';
 
-interface DashboardClientProps {}
+interface DashboardClientProps {
+  transactions: Transaction[];
+  budgets: Budget[];
+  goals: Goal[];
+  recurringTransactions: RecurringTransaction[];
+}
 
 const welcomeMessages = [
   "Welcome Back, Boss!",
@@ -35,46 +37,13 @@ const getCurrentMonthValue = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
-export default function DashboardClient({}: DashboardClientProps) {
+export default function DashboardClient({ transactions, budgets, goals, recurringTransactions }: DashboardClientProps) {
   const [welcomeMessage, setWelcomeMessage] = useState(welcomeMessages[0]);
   const [view, setView] = useState<string>(getCurrentMonthValue());
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
-
-  const fetchData = async () => {
-      const userId = await getUserIdFromCookie();
-      if (!userId) {
-          setIsLoading(false); // Stop loading if no user
-          return;
-      };
-
-      setIsLoading(true);
-      getData(userId)
-      .then(({ transactions, budgets, goals, recurringTransactions }) => {
-          setTransactions(transactions);
-          setBudgets(budgets);
-          setGoals(goals);
-          setRecurringTransactions(recurringTransactions);
-      })
-      .catch(() => {
-          toast({ variant: 'destructive', title: 'Error', description: 'Failed to load dashboard data.' });
-      })
-      .finally(() => {
-          setIsLoading(false);
-      });
-  }
-
   useEffect(() => {
-    fetchData();
-    // This runs only on the client, after the initial render, to avoid hydration mismatch
     const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
     setWelcomeMessage(welcomeMessages[randomIndex]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const availableMonths = useMemo(() => {
@@ -91,7 +60,7 @@ export default function DashboardClient({}: DashboardClientProps) {
         return transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
     }
     return transactions.filter(t => t.date.startsWith(view));
-}, [transactions, view]);
+  }, [transactions, view]);
 
   const advisorData = useMemo(() => {
       const currentMonth = getCurrentMonthValue();
@@ -155,14 +124,6 @@ export default function DashboardClient({}: DashboardClientProps) {
     const [year, month] = monthStr.split('-');
     return new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
   };
-
-  if (isLoading) {
-      return (
-        <div className="fixed inset-0 bg-background z-50">
-            <AppLoader />
-        </div>
-      )
-  }
 
   return (
     <div className="space-y-6">

@@ -35,39 +35,23 @@ const budgetTitles = [
     "Budget Podu, Life-a Maathu!",
 ];
 
-export default function BudgetsClient() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+interface BudgetsClientProps {
+  initialBudgets: Budget[];
+  initialTransactions: Transaction[];
+}
+
+export default function BudgetsClient({ initialBudgets, initialTransactions }: BudgetsClientProps) {
+  const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [title, setTitle] = useState(budgetTitles[0]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    const fetchData = async () => {
-        const userId = await getUserIdFromCookie();
-        if (!userId) return;
-
-        setIsLoading(true);
-        try {
-            const [budgetsData, transactionsData] = await Promise.all([
-                getBudgets(userId),
-                getTransactions(userId)
-            ]);
-            setBudgets(budgetsData);
-            setTransactions(transactionsData);
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch data.' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
-    fetchData();
     setTitle(budgetTitles[Math.floor(Math.random() * budgetTitles.length)]);
-  }, [toast]);
+  }, []);
 
   const handleEdit = (budget: Budget) => {
     setSelectedBudget(budget);
@@ -161,14 +145,6 @@ export default function BudgetsClient() {
       }
     })
   }, [budgets, transactions]);
-  
-  if (isLoading) {
-    return (
-        <div className="fixed inset-0 bg-background z-50">
-            <AppLoader />
-        </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

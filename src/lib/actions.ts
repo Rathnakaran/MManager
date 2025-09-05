@@ -144,6 +144,9 @@ export async function deleteUser(userIdToDelete: string) {
 
 // --- Data Fetching ---
 export async function getData(userId: string) {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
   const [transactions, budgets, goals, recurringTransactions] = await Promise.all([
     getTransactions(userId),
     getBudgets(userId),

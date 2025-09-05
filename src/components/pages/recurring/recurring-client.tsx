@@ -31,42 +31,20 @@ import {
     getBudgetCategories,
     getUserIdFromCookie
 } from '@/lib/actions';
-import AppLoader from '@/components/layout/app-loader';
 
 
-interface RecurringClientProps {}
+interface RecurringClientProps {
+  initialRecurring: RecurringTransaction[];
+  initialCategories: string[];
+}
 
-export default function RecurringClient({}: RecurringClientProps) {
-  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function RecurringClient({ initialRecurring, initialCategories }: RecurringClientProps) {
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>(initialRecurring);
+  const [categories, setCategories] = useState<string[]>(initialCategories);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selected, setSelected] = useState<RecurringTransaction | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchData = async () => {
-        const userId = await getUserIdFromCookie();
-        if (!userId) return;
-
-        setIsLoading(true);
-        try {
-            const [recurringData, categoriesData] = await Promise.all([
-                getRecurringTransactions(userId),
-                getBudgetCategories(userId)
-            ]);
-            setRecurringTransactions(recurringData);
-            setCategories(categoriesData);
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch recurring transactions.' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    fetchData();
-  }, [toast]);
-
 
   const handleEdit = (item: RecurringTransaction) => {
     setSelected(item);
@@ -131,14 +109,6 @@ export default function RecurringClient({}: RecurringClientProps) {
         return `On day ${item.dayOfMonth}`;
       }
       return item.frequency;
-  }
-
-  if (isLoading) {
-    return (
-        <div className="fixed inset-0 bg-background z-50">
-            <AppLoader />
-        </div>
-    )
   }
 
   return (

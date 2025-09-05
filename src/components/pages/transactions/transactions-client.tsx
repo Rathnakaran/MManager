@@ -21,10 +21,11 @@ import {
     getUserIdFromCookie
 } from '@/lib/actions';
 import Papa from 'papaparse';
-import AppLoader from '@/components/layout/app-loader';
 
-
-interface TransactionsClientProps {}
+interface TransactionsClientProps {
+    initialTransactions: Transaction[];
+    initialCategories: { budgetCategories: string[], goalCategories: string[] };
+}
 
 const transactionTitles = [
     "Your 'Kanaku-Pillai' Diary",
@@ -37,24 +38,19 @@ const sortTransactions = (transactions: Transaction[]) => {
     return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
-export default function TransactionsClient({}: TransactionsClientProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<{ budgetCategories: string[], goalCategories: string[] }>({ budgetCategories: [], goalCategories: [] });
+export default function TransactionsClient({ initialTransactions, initialCategories }: TransactionsClientProps) {
+  const [transactions, setTransactions] = useState<Transaction[]>(sortTransactions(initialTransactions));
+  const [categories, setCategories] = useState(initialCategories);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [title, setTitle] = useState(transactionTitles[0]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   
   const fetchData = async () => {
     const userId = await getUserIdFromCookie();
-    if (!userId) {
-        setIsLoading(false);
-        return;
-    };
+    if (!userId) return;
 
-    setIsLoading(true);
     try {
         const [transactionsData, budgetCats, goalCats] = await Promise.all([
             getTransactions(userId),
@@ -64,14 +60,11 @@ export default function TransactionsClient({}: TransactionsClientProps) {
         setTransactions(sortTransactions(transactionsData));
         setCategories({ budgetCategories: budgetCats, goalCategories: goalCats });
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transaction data.' });
-    } finally {
-        setIsLoading(false);
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to refresh transaction data.' });
     }
   };
 
   useEffect(() => {
-    fetchData();
     setTitle(transactionTitles[Math.floor(Math.random() * transactionTitles.length)]);
   }, []);
 
@@ -184,15 +177,6 @@ export default function TransactionsClient({}: TransactionsClientProps) {
     document.body.removeChild(link);
     toast({ title: "Export Started", description: "Your transaction data is being downloaded."});
   };
-
-  if (isLoading) {
-    return (
-        <div className="fixed inset-0 bg-background z-50">
-            <AppLoader />
-        </div>
-    );
-  }
-
 
   return (
     <div className="space-y-4">

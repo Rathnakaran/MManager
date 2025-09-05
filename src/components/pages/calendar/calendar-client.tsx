@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import type { Transaction } from '@/types';
 import { getTransactions, getUserIdFromCookie } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import AppLoader from '@/components/layout/app-loader';
 import CalendarView from './calendar-view';
 import {
   Select,
@@ -17,41 +16,25 @@ import {
 
 export type CalendarViewType = 'monthly' | 'weekly' | 'daily';
 
-export default function CalendarClient() {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+interface CalendarClientProps {
+  initialTransactions: Transaction[];
+}
+
+export default function CalendarClient({ initialTransactions }: CalendarClientProps) {
+    const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
     const [view, setView] = useState<CalendarViewType>('monthly');
     const { toast } = useToast();
 
     const fetchData = async () => {
         const userId = await getUserIdFromCookie();
         if (!userId) {
-            setIsLoading(false);
             return;
-        }
-
-        // Don't set loading to true on refetch
-        if (transactions.length === 0) {
-            setIsLoading(true);
         }
         
         getTransactions(userId)
             .then(setTransactions)
             .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transactions.' }))
-            .finally(() => setIsLoading(false));
     };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="fixed inset-0 bg-background z-50">
-                <AppLoader />
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6">

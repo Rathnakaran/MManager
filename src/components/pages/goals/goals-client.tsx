@@ -15,7 +15,9 @@ import GoalForm from './goal-form';
 import AppLoader from '@/components/layout/app-loader';
 import { format, parseISO } from 'date-fns';
 
-interface GoalsClientProps {}
+interface GoalsClientProps {
+  initialGoals: Goal[];
+}
 
 const goalTitles = [
     "Your Future, Your Sketch!",
@@ -24,30 +26,17 @@ const goalTitles = [
     "Dream Big, Plan Bigger!",
 ];
 
-export default function GoalsClient({}: GoalsClientProps) {
-  const [goals, setGoals] = useState<Goal[]>([]);
+export default function GoalsClient({ initialGoals }: GoalsClientProps) {
+  const [goals, setGoals] = useState<Goal[]>(initialGoals);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [title, setTitle] = useState(goalTitles[0]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchData = async () => {
-        const userId = await getUserIdFromCookie();
-        if (!userId) return;
-
-        setIsLoading(true);
-        getGoals(userId)
-        .then(setGoals)
-        .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to load goals.' }))
-        .finally(() => setIsLoading(false));
-    }
-    fetchData();
-
     setTitle(goalTitles[Math.floor(Math.random() * goalTitles.length)]);
-  }, [toast]);
+  }, []);
 
   const handleEdit = (goal: Goal) => {
     setSelectedGoal(goal);
@@ -119,14 +108,6 @@ export default function GoalsClient({}: GoalsClientProps) {
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
   const formatDateDisplay = (dateString: string) => format(parseISO(dateString), 'PPP');
-
-  if (isLoading) {
-    return (
-        <div className="fixed inset-0 bg-background z-50">
-            <AppLoader />
-        </div>
-    )
-  }
 
   return (
     <div className="space-y-4">
