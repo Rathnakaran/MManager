@@ -122,6 +122,10 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
     reader.readAsDataURL(file);
   };
 
+  const formattedDob = currentUser.dateOfBirth && !isNaN(new Date(currentUser.dateOfBirth).getTime())
+    ? format(new Date(currentUser.dateOfBirth), 'PPP')
+    : 'Not Set';
+
   return (
     <Card>
       <Form {...form}>
@@ -190,7 +194,7 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="dob">Date of Birth</Label>
-                <Input id="dob" disabled value={format(new Date(currentUser.dateOfBirth), 'PPP')} />
+                <Input id="dob" disabled value={formattedDob} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
