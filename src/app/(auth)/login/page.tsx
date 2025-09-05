@@ -50,6 +50,22 @@ const descriptionDialogues = [
     "\"Your financial journey begins here.\" Login to FinWise."
 ];
 
+const errorDialogues = [
+    "Invalid username or password. \"Enna da, plan la maaripochu?\"",
+    "Wrong details! \"Try again, 'nanba'.\"",
+    "Incorrect credentials. \"Nadakkura vayasula sarakkudhama...\"",
+    "Login failed. \"Moonu nimisham... time kudu... ipo sollunga.\"",
+    "Access denied. \"Therikka vidalama!\"... but with the right password."
+];
+
+const successDialogues = [
+    "Vaathi Coming!",
+    "Success! Kelambittanya kelambittan...",
+    "Correct-a pannita! Welcome back!",
+    "Welcome! The boss has arrived.",
+    "Naanga yaru nu theriyulla? FinWise thalaivar!",
+];
+
 const setCookie = (name: string, value: string, days: number) => {
     let expires = "";
     if (days) {
@@ -86,17 +102,19 @@ export default function LoginPage() {
         const user = await getUserByUsername(values.username, values.password);
         if (user) {
           setCookie('loggedInUserId', user.id, 7); // Set cookie for 7 days
+          const successMessage = successDialogues[Math.floor(Math.random() * successDialogues.length)];
           toast({
             title: 'Success!',
-            description: `Welcome back, ${user.username}! "Vaathi Coming!"`,
+            description: `Welcome back, ${user.username}! "${successMessage}"`,
           });
           router.push('/dashboard');
         } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Invalid username or password. "Enna da, plan la maaripochu?"',
-          });
+            const errorMessage = errorDialogues[Math.floor(Math.random() * errorDialogues.length)];
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: errorMessage,
+            });
         }
       } catch (error) {
         toast({
