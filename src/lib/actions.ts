@@ -12,19 +12,17 @@ import {
   doc,
   writeBatch,
   query,
-  orderBy,
   getDoc,
   where,
 } from 'firebase/firestore';
 import type { Transaction, Budget, Goal, RecurringTransaction, User } from '@/types';
-import { sampleBudgets } from './seed-data';
 
 const getGoalKeyword = (goalName: string) => {
     return goalName.split(' ')[0];
 }
 
 // --- User Actions ---
-export async function createUser(userData: Omit<User, 'id'>) {
+export async function createUser(userData: Omit<User, 'id' | 'role'>) {
     const usersCollection = collection(db, 'users');
     const q = query(usersCollection, where('username', '==', userData.username));
     const snapshot = await getDocs(q);
@@ -32,10 +30,11 @@ export async function createUser(userData: Omit<User, 'id'>) {
         throw new Error('Username already exists');
     }
     
-    const newDocRef = await addDoc(usersCollection, userData);
-    const newUser = { id: newDocRef.id, ...userData };
+    const userWithRole = { ...userData, role: 'user' as const };
+    const newDocRef = await addDoc(usersCollection, userWithRole);
+    const newUser = { id: newDocRef.id, ...userWithRole };
 
-    // Seed data for the new user
+    // Seed data for the new user - currently empty as requested
     await seedInitialData(newUser.id);
 
     revalidatePath('/settings');
@@ -64,13 +63,27 @@ export async function getUserByUsername(username: string, password?: string): Pr
         return null;
     }
     const userDoc = snapshot.docs[0];
-    return { id: userDoc.id, ...userDoc.data() } as User;
+    const userData = userDoc.data();
+    
+    // Assign admin role to 'Rathnakaran' if role is not set
+    if (userData.username === 'Rathnakaran' && !userData.role) {
+        userData.role = 'admin';
+    }
+
+    return { id: userDoc.id, ...userData } as User;
 }
 
 export async function getUsers(): Promise<User[]> {
     const usersCollection = collection(db, 'users');
     const snapshot = await getDocs(usersCollection);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+    return snapshot.docs.map(doc => {
+        const data = doc.data();
+        // Assign admin role to 'Rathnakaran' if role is not set
+        if (data.username === 'Rathnakaran' && !data.role) {
+            data.role = 'admin';
+        }
+        return { id: doc.id, ...data } as User;
+    });
 }
 
 export async function updateUser(userId: string, userData: Partial<Pick<User, 'name' | 'email' | 'dateOfBirth'>>) {
@@ -83,6 +96,28 @@ export async function updateUser(userId: string, userData: Partial<Pick<User, 'n
 export async function updateUserPassword(userId: string, newPassword: string) {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, { password: newPassword });
+    revalidatePath('/settings');
+    return { success: true };
+}
+
+export async function deleteUser(userIdToDelete: string) {
+    const batch = writeBatch(db);
+
+    // 1. Delete the user document
+    const userRef = doc(db, 'users', userIdToDelete);
+    batch.delete(userRef);
+
+    // 2. Delete all associated data
+    const collectionsToDelete = ['transactions', 'budgets', 'goals', 'recurring'];
+    for (const collectionName of collectionsToDelete) {
+        const q = query(collection(db, collectionName), where('userId', '==', userIdToDelete));
+        const snapshot = await getDocs(q);
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+    }
+
+    await batch.commit();
     revalidatePath('/settings');
     return { success: true };
 }
@@ -100,6 +135,7 @@ export async function getData(userId: string) {
 }
 
 export async function getTransactions(userId: string): Promise<Transaction[]> {
+  if (!userId) return [];
   const q = query(collection(db, 'transactions'), where('userId', '==', userId));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));

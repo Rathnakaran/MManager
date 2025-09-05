@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, UserPlus, KeyRound, UserCog, Edit, Users } from 'lucide-react';
+import { CalendarIcon, UserPlus, KeyRound, UserCog, Edit, Users, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -40,7 +40,18 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { createUser, getUserById, updateUserPassword, getUsers, updateUser } from '@/lib/actions';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { createUser, getUserById, updateUserPassword, getUsers, updateUser, deleteUser } from '@/lib/actions';
 import { Separator } from '@/components/ui/separator';
 import type { User } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -111,7 +122,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchUsers();
-    setQuote(tamilQuotes[Math.floor(Math.random() * tamilQuotes.length)]);
+    const randomQuote = tamilQuotes[Math.floor(Math.random() * tamilQuotes.length)];
+    setQuote(randomQuote);
   }, []);
 
   const createUserForm = useForm<CreateUserFormValues>({
@@ -180,6 +192,29 @@ export default function SettingsPage() {
       }
     });
   };
+  
+  const handleDeleteUser = (userId: string) => {
+    if (userId === currentUser?.id) {
+        toast({ variant: 'destructive', title: 'Error', description: "Admin can't delete their own account. 'Enna da, plan la maaripochu?'" });
+        return;
+    }
+    startTransition(async () => {
+        try {
+            await deleteUser(userId);
+            await fetchUsers();
+            toast({
+                title: 'Success!',
+                description: 'User has been deleted successfully.',
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to delete user.',
+            });
+        }
+    });
+  }
 
   const onEditUserSubmit = (values: EditUserFormValues) => {
     if (!selectedUser) return;
@@ -222,6 +257,8 @@ export default function SettingsPage() {
     return <div>Loading user profile...</div>; // Or a skeleton loader
   }
 
+  const isAdmin = currentUser.role === 'admin';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -262,64 +299,90 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
       
-      <Separator />
-
-      <Card>
-        <CardHeader className="flex flex-row justify-between items-start">
-            <div>
-                <CardTitle className="flex items-center gap-2"><Users /> User Management</CardTitle>
-                <CardDescription>
-                    Create, view, and manage user accounts for the application.
-                </CardDescription>
-            </div>
-            <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
-                <DialogTrigger asChild>
-                    <Button><UserPlus className="mr-2 h-4 w-4" /> Create New User</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create a New User</DialogTitle>
-                        <DialogDescription>
-                            Fill in the details below to create a new user account.
-                        </DialogDescription>
-                    </DialogHeader>
-                     <Form {...createUserForm}>
-                        <form onSubmit={createUserForm.handleSubmit(onCreateUserSubmit)} className="space-y-4">
-                            <FormField control={createUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="e.g., Superstar" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                            <FormField control={createUserForm.control} name="username" render={({ field }) => (<FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="new_user" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                            <FormField control={createUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="user@example.com" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                            <FormField control={createUserForm.control} name="password" render={({ field }) => (<FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                            <FormField control={createUserForm.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col pt-2"><FormLabel>Date of Birth</FormLabel><Popover open={isCreateCalendarOpen} onOpenChange={setIsCreateCalendarOpen}><PopoverTrigger asChild><FormControl><Button variant={'outline'} className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={(date) => {field.onChange(date); setIsCreateCalendarOpen(false);}} captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
-                            <DialogFooter className='pt-4'>
-                                <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-                                <Button type="submit" disabled={isPending}>{isPending ? 'Creating...' : 'Create User'}</Button>
-                            </DialogFooter>
-                        </form>
-                    </Form>
-                </DialogContent>
-            </Dialog>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            {allUsers.map((user) => (
-                <Card key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-4">
-                        <Avatar>
-                           <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <div className="font-semibold flex items-center gap-2">{user.name} {user.id === currentUser.id && <Badge variant="secondary">You</Badge>}</div>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                            <p className="text-xs text-muted-foreground">@{user.username}</p>
-                        </div>
+      {isAdmin && (
+        <>
+            <Separator />
+            <Card>
+                <CardHeader className="flex flex-row justify-between items-start">
+                    <div>
+                        <CardTitle className="flex items-center gap-2"><Users /> User Management</CardTitle>
+                        <CardDescription>
+                            Create, view, and manage user accounts for the application.
+                        </CardDescription>
                     </div>
-                    <div className="flex gap-2 mt-4 sm:mt-0">
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(user)}><Edit className="mr-2 h-3 w-3" /> Edit</Button>
-                        <Button variant="secondary" size="sm" onClick={() => openPasswordDialog(user)}><KeyRound className="mr-2 h-3 w-3" /> Change Password</Button>
-                    </div>
-                </Card>
-            ))}
-        </CardContent>
-      </Card>
+                    <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
+                        <DialogTrigger asChild>
+                            <Button><UserPlus className="mr-2 h-4 w-4" /> Create New User</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create a New User</DialogTitle>
+                                <DialogDescription>
+                                    Fill in the details below to create a new user account.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <Form {...createUserForm}>
+                                <form onSubmit={createUserForm.handleSubmit(onCreateUserSubmit)} className="space-y-4">
+                                    <FormField control={createUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="e.g., Superstar" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={createUserForm.control} name="username" render={({ field }) => (<FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="new_user" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={createUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="user@example.com" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={createUserForm.control} name="password" render={({ field }) => (<FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={createUserForm.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col pt-2"><FormLabel>Date of Birth</FormLabel><Popover open={isCreateCalendarOpen} onOpenChange={setIsCreateCalendarOpen}><PopoverTrigger asChild><FormControl><Button variant={'outline'} className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={(date) => {field.onChange(date); setIsCreateCalendarOpen(false);}} captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} disabled={(date) => date > new Date() || date < new Date('1900-01-01')} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
+                                    <DialogFooter className='pt-4'>
+                                        <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                                        <Button type="submit" disabled={isPending}>{isPending ? 'Creating...' : 'Create User'}</Button>
+                                    </DialogFooter>
+                                </form>
+                            </Form>
+                        </DialogContent>
+                    </Dialog>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {allUsers.map((user) => (
+                        <Card key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-4">
+                                <Avatar>
+                                <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <div className="font-semibold flex items-center gap-2">
+                                        {user.name}
+                                        {user.id === currentUser.id && <Badge variant="secondary">You</Badge>}
+                                        {user.role === 'admin' && <Badge variant="default">Admin</Badge>}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                    <p className="text-xs text-muted-foreground">@{user.username}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 mt-4 sm:mt-0">
+                                <Button variant="outline" size="sm" onClick={() => openEditDialog(user)}><Edit className="mr-2 h-3 w-3" /> Edit</Button>
+                                <Button variant="secondary" size="sm" onClick={() => openPasswordDialog(user)}><KeyRound className="mr-2 h-3 w-3" /> Change Password</Button>
+                                {user.id !== currentUser.id && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="sm"><Trash2 className="mr-2 h-3 w-3" /> Delete</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete the account for <b>@{user.username}</b> and all of their associated data.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Continue</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                                )}
+                            </div>
+                        </Card>
+                    ))}
+                </CardContent>
+            </Card>
+        </>
+      )}
 
 
       {/* Edit User Dialog */}
