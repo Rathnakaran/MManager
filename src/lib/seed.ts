@@ -1,20 +1,19 @@
 
 /**
  * To run this script:
- * 1. Make sure your Firestore database is created and security rules allow writes.
- * 2. Manually create an admin user in the Firebase console.
- * 3. Get the user ID of that admin user.
- * 4. Open a terminal and run `npx tsx src/lib/seed.ts <YOUR_ADMIN_USER_ID>`
+ * 1. Manually create an admin user in the Firebase console (e.g., 'Rathnakaran').
+ * 2. Get the user ID of that admin user.
+ * 3. Open a terminal and run `npx tsx src/lib/seed.ts`
+ * This will populate the initial data for the 'Rathnakaran' user.
  */
-import { db } from './firebase';
-import { seedInitialData, getUserByUsername } from './actions';
+import { getUserByUsername, seedInitialData } from './actions';
 
 async function main() {
-  console.log('Starting to seed data...');
+  console.log('Starting to seed data for admin user...');
   try {
     const adminUser = await getUserByUsername('Rathnakaran');
     if (!adminUser) {
-        console.error("Admin user 'Rathnakaran' not found. Please create this user manually in Firebase Authentication and Firestore `users` collection.");
+        console.error("Admin user 'Rathnakaran' not found. Please create this user manually in Firebase Authentication and Firestore `users` collection before seeding.");
         return;
     }
     

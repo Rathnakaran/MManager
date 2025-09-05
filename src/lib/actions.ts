@@ -17,6 +17,7 @@ import {
   where,
 } from 'firebase/firestore';
 import type { Transaction, Budget, Goal, RecurringTransaction, User } from '@/types';
+import { sampleBudgets, sampleGoals, sampleTransactions, sampleRecurringTransactions } from './seed-data';
 
 const getGoalKeyword = (goalName: string) => {
     return goalName.split(' ')[0];
@@ -32,11 +33,12 @@ export async function createUser(userData: Omit<User, 'id'>) {
     }
     
     const newDocRef = await addDoc(usersCollection, userData);
-    revalidatePath('/settings');
     const newUser = { id: newDocRef.id, ...userData };
 
     // Seed data for the new user
     await seedInitialData(newUser.id);
+
+    revalidatePath('/settings');
     return newUser;
 }
 
@@ -280,8 +282,6 @@ export async function deleteRecurringTransaction(id: string) {
 
 
 // --- Seeding ---
-import { sampleBudgets, sampleGoals, sampleTransactions, sampleRecurringTransactions } from './seed-data';
-
 export async function seedInitialData(userId: string) {
   const batch = writeBatch(db);
 
