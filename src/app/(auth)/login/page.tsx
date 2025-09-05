@@ -90,7 +90,7 @@ const creatorDialogues = [
     "\"It's just the beginning.\" - Vijay",
     "\"Naan veezhven endru ninaithayo?\" - Superstar Rajinikanth",
     "\"Once I decide, I don't even listen to myself.\" - Ajith Kumar",
-    "\"Vaathi coming!\" - Vijay",
+    "\"Never Ever Give Up.\" - Ajith Kumar",
     "\"Singam single-a dhaan varum.\" - Superstar Rajinikanth"
 ];
 
