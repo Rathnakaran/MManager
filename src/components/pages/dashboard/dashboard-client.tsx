@@ -120,8 +120,10 @@ export default function DashboardClient({}: DashboardClientProps) {
   }, [budgets, totalSpent, view]);
   
   const advisorData = useMemo(() => {
+    const currentMonth = getCurrentMonthValue();
+    
     const monthlyTotalSpent = transactions
-      .filter(t => t.type === 'expense' && t.date.startsWith(getCurrentMonthValue()))
+      .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
       .reduce((sum, t) => sum + t.amount, 0);
 
     const monthlyTotalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
@@ -129,7 +131,7 @@ export default function DashboardClient({}: DashboardClientProps) {
     
     const monthlyExpenseBreakdown: Record<string, number> = {};
     transactions
-      .filter(t => t.type === 'expense' && t.date.startsWith(getCurrentMonthValue()))
+      .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
       .forEach(t => {
           if (!monthlyExpenseBreakdown[t.category]) {
               monthlyExpenseBreakdown[t.category] = 0;
