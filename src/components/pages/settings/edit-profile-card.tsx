@@ -122,9 +122,20 @@ export default function EditProfileCard({ currentUser, onPasswordChangeClick, on
     reader.readAsDataURL(file);
   };
 
-  const formattedDob = currentUser.dateOfBirth && !isNaN(new Date(currentUser.dateOfBirth).getTime())
-    ? format(new Date(currentUser.dateOfBirth), 'PPP')
-    : 'Not Set';
+  const formattedDob = React.useMemo(() => {
+    if (!currentUser.dateOfBirth) return 'Not Set';
+    try {
+      // The date from firestore is a string 'YYYY-MM-DD'.
+      // Creating a new Date from it might have timezone issues depending on the browser.
+      // A robust way is to parse it as UTC.
+      const date = new Date(currentUser.dateOfBirth + 'T00:00:00Z');
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return format(date, 'PPP');
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  }, [currentUser.dateOfBirth]);
+
 
   return (
     <Card>

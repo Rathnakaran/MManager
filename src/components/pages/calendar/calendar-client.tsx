@@ -13,17 +13,21 @@ export default function CalendarClient() {
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const userId = await getUserIdFromCookie();
-            if (!userId) return;
+    const fetchData = async () => {
+        const userId = await getUserIdFromCookie();
+        if (!userId) {
+            setIsLoading(false);
+            return;
+        }
 
-            setIsLoading(true);
-            getTransactions(userId)
-                .then(setTransactions)
-                .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transactions.' }))
-                .finally(() => setIsLoading(false));
-        };
+        setIsLoading(true);
+        getTransactions(userId)
+            .then(setTransactions)
+            .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transactions.' }))
+            .finally(() => setIsLoading(false));
+    };
+
+    useEffect(() => {
         fetchData();
     }, [toast]);
 
@@ -41,7 +45,7 @@ export default function CalendarClient() {
                 <h1 className="text-2xl font-bold font-headline">Transaction Calendar</h1>
                 <p className="text-sm text-muted-foreground italic">"Oru naal-la enna nadakkudhu nu paaru!" (See what happens in a day!)</p>
             </div>
-            <CalendarView transactions={transactions} />
+            <CalendarView transactions={transactions} onDataChange={fetchData} />
         </div>
     );
 }

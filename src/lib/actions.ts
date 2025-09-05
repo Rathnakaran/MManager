@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore';
 import type { Transaction, Budget, Goal, RecurringTransaction, User } from '@/types';
 import { cookies } from 'next/headers';
-
+import { format } from 'date-fns';
 
 export async function getUserIdFromCookie() {
     const cookieStore = cookies();
@@ -30,17 +30,32 @@ const getGoalKeyword = (goalName: string) => {
     return goalName.split(' ')[0];
 }
 
+// A helper function to format dates to 'yyyy-MM-dd' in a way that avoids timezone issues.
+const toDateString = (date: Date): string => {
+    // To combat timezone issues, get the year, month, and day from the client's date,
+    // and then construct a new date string in YYYY-MM-DD format.
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // --- User Actions ---
-export async function createUser(userData: Omit<User, 'id'>) {
+export async function createUser(userData: Omit<User, 'id'> & {dateOfBirth: Date; password?: string;}) {
     const usersCollection = collection(db, 'users');
     const q = query(usersCollection, where('username', '==', userData.username));
     const snapshot = await getDocs(q);
     if (!snapshot.empty) {
         throw new Error('Username already exists');
     }
+
+    const userDataWithDateString = {
+        ...userData,
+        dateOfBirth: toDateString(userData.dateOfBirth),
+    }
     
-    const newDocRef = await addDoc(usersCollection, userData);
-    const newUser = { id: newDocRef.id, ...userData };
+    const newDocRef = await addDoc(usersCollection, userDataWithDateString);
+    const newUser = { id: newDocRef.id, ...userDataWithDateString };
 
     await seedInitialData(newUser.id);
 
@@ -59,18 +74,22 @@ export async function getUserById(userId: string): Promise<User | null> {
 
 export async function getUserByUsername(username: string, password?: string): Promise<User | null> {
     const usersCollection = collection(db, 'users');
-    let q;
-    if (password) {
-        q = query(usersCollection, where('username', '==', username), where('password', '==', password));
-    } else {
-        q = query(usersCollection, where('username', '==', username));
-    }
+    const q = query(usersCollection, where('username', '==', username));
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
         return null;
     }
     const userDoc = snapshot.docs[0];
-    const userData = userDoc.data();
+    const userData = userDoc.data() as User;
+
+    // After getting the user, now check the password.
+    // This logic handles the case where the password might not have been saved initially.
+    if (password && userData.password && userData.password !== password) {
+        return null;
+    }
+     if (password && !userData.password) { // Handle old users with no password field
+        return null;
+    }
 
     return { id: userDoc.id, ...userData } as User;
 }
@@ -153,9 +172,13 @@ export async function getBudgetCategories(userId: string): Promise<string[]> {
 }
 
 // --- Transaction Actions ---
-export async function addTransaction(transactionData: Omit<Transaction, 'id'>): Promise<Transaction> {
-  const newDocRef = await addDoc(collection(db, 'transactions'), transactionData);
-  const newTransaction = { id: newDocRef.id, ...transactionData };
+export async function addTransaction(transactionData: Omit<Transaction, 'id' | 'date'> & {date: Date}): Promise<Transaction> {
+  const dataWithDateString = {
+    ...transactionData,
+    date: toDateString(transactionData.date)
+  };
+  const newDocRef = await addDoc(collection(db, 'transactions'), dataWithDateString);
+  const newTransaction = { id: newDocRef.id, ...dataWithDateString };
 
   const goals = await getGoals(transactionData.userId);
   const goal = goals.find(g => getGoalKeyword(g.name) === transactionData.category);
@@ -171,9 +194,14 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>): 
   return newTransaction;
 }
 
-export async function updateTransaction(id: string, transactionData: Partial<Omit<Transaction, 'id' | 'userId'>>): Promise<Transaction> {
+export async function updateTransaction(id: string, transactionData: Partial<Omit<Transaction, 'id' | 'userId' | 'date'>> & {date?: Date}): Promise<Transaction> {
+  const dataToUpdate: any = { ...transactionData };
+  if(transactionData.date) {
+    dataToUpdate.date = toDateString(transactionData.date);
+  }
+
   const transactionRef = doc(db, 'transactions', id);
-  await updateDoc(transactionRef, transactionData);
+  await updateDoc(transactionRef, dataToUpdate);
   revalidatePath('/');
   
   const updatedDoc = await getDoc(transactionRef);
@@ -221,16 +249,24 @@ export async function getGoalCategories(userId: string): Promise<string[]> {
     return goals.map(doc => getGoalKeyword(doc.name as string));
 }
 
-export async function addGoal(goalData: Omit<Goal, 'id'>): Promise<Goal> {
-  const newGoalRef = await addDoc(collection(db, 'goals'), goalData);
+export async function addGoal(goalData: Omit<Goal, 'id' | 'targetDate'> & {targetDate: Date}): Promise<Goal> {
+  const dataWithDateString = {
+    ...goalData,
+    targetDate: toDateString(goalData.targetDate),
+  };
+  const newGoalRef = await addDoc(collection(db, 'goals'), dataWithDateString);
   revalidatePath('/');
-  const newGoal = { id: newGoalRef.id, ...goalData };
+  const newGoal = { id: newGoalRef.id, ...dataWithDateString };
   return newGoal;
 }
 
-export async function updateGoal(id: string, goalData: Partial<Goal>): Promise<Goal> {
+export async function updateGoal(id: string, goalData: Partial<Omit<Goal, 'id' | 'targetDate'>> & {targetDate?: Date}): Promise<Goal> {
+  const dataToUpdate: any = { ...goalData };
+  if(goalData.targetDate) {
+    dataToUpdate.targetDate = toDateString(goalData.targetDate);
+  }
   const goalRef = doc(db, 'goals', id);
-  await updateDoc(goalRef, goalData);
+  await updateDoc(goalRef, dataToUpdate);
   revalidatePath('/');
   const updatedDoc = await getDoc(goalRef);
   return { id: updatedDoc.id, ...updatedDoc.data() } as Goal;
@@ -258,7 +294,7 @@ export async function importTransactions(userId: string, data: any[]): Promise<T
 
         const transactionData: Omit<Transaction, 'id'> = {
             userId,
-            date: new Date(row.Date).toISOString(),
+            date: new Date(row.Date).toISOString().split('T')[0], // Ensure date is in YYYY-MM-DD format
             description: row.Description,
             amount: Math.abs(amount),
             type: type,

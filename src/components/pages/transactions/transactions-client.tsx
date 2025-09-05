@@ -99,7 +99,7 @@ export default function TransactionsClient({}: TransactionsClientProps) {
     });
   };
 
-  const onFormSubmit = (values: Omit<Transaction, 'id' | 'userId'>, id?: string) => {
+  const onFormSubmit = (values: Omit<Transaction, 'id' | 'userId' | 'date'> & { date: Date }, id?: string) => {
     startTransition(async () => {
       const userId = await getUserIdFromCookie();
       if (!userId) {
