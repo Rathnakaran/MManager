@@ -85,35 +85,28 @@ export default function DashboardClient({}: DashboardClientProps) {
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-
     if (view === 'yearly') {
-        return transactions.filter(t => {
-            const transactionDate = new Date(t.date);
-            return transactionDate.getFullYear() === currentYear;
-        });
+        const currentYear = new Date().getFullYear();
+        return transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
     }
-
-    // Month view 'YYYY-MM'
     return transactions.filter(t => t.date.startsWith(view));
+}, [transactions, view]);
 
-  }, [transactions, view]);
 
-  const { totalSpent, expenseBreakdown } = useMemo(() => {
-    const expenseBreakdown: Record<string, number> = {};
-    const totalSpent = filteredTransactions
+const { totalSpent, expenseBreakdown } = useMemo(() => {
+    const breakdown: Record<string, number> = {};
+    const spent = filteredTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => {
-        if (!expenseBreakdown[t.category]) {
-            expenseBreakdown[t.category] = 0;
+        if (!breakdown[t.category]) {
+            breakdown[t.category] = 0;
         }
-        expenseBreakdown[t.category] += t.amount;
+        breakdown[t.category] += t.amount;
         return sum + t.amount;
       }, 0);
 
-      return { totalSpent, expenseBreakdown };
-  }, [filteredTransactions]);
+      return { totalSpent: spent, expenseBreakdown: breakdown };
+}, [filteredTransactions]);
 
   const { totalBudget, remainingBudget } = useMemo(() => {
     const isYearly = view === 'yearly';

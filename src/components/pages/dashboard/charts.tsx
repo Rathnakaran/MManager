@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -28,6 +29,8 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
     return Object.entries(data).map(([name, value]) => ({ name, value }));
   }, [data]);
 
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+
   if (chartData.length === 0) {
     return (
       <Card>
@@ -36,7 +39,7 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
           <CardDescription>A pie chart of where your money went.</CardDescription>
         </CardHeader>
         <CardContent className="flex h-[350px] items-center justify-center">
-          <p className="text-muted-foreground">No expense data for this month.</p>
+          <p className="text-muted-foreground">No expense data for this period.</p>
         </CardContent>
       </Card>
     );
@@ -58,6 +61,7 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
                   border: '1px solid hsl(var(--border))',
                   color: 'hsl(var(--foreground))',
                 }}
+                formatter={(value: number) => formatCurrency(value)}
               />
               <Legend />
               <Pie
