@@ -168,7 +168,7 @@ export default function SettingsPage() {
       try {
         const userData = {
             ...values,
-            dateOfBirth: values.dateOfBirth.toISOString().split('T')[0],
+            dateOfBirth: format(values.dateOfBirth, 'yyyy-MM-dd'),
         }
         await createUser(userData);
         await fetchUsers(); // Re-fetch users to update the list
@@ -218,7 +218,7 @@ export default function SettingsPage() {
         const userData = {
             name: values.name,
             email: values.email,
-            dateOfBirth: values.dateOfBirth.toISOString().split('T')[0],
+            dateOfBirth: format(values.dateOfBirth, 'yyyy-MM-dd'),
         }
         await updateUser(selectedUser.id, userData);
         await fetchUsers();
