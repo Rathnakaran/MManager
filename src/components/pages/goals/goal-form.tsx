@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Goal } from '@/types';
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Goal name must be at least 2 characters.' }),
@@ -44,6 +44,7 @@ interface GoalFormProps {
 
 export default function GoalForm({ goal, onFinished, onFormSubmit }: GoalFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -113,7 +114,7 @@ export default function GoalForm({ goal, onFinished, onFormSubmit }: GoalFormPro
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Target Date</FormLabel>
-              <Popover>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -135,7 +136,10 @@ export default function GoalForm({ goal, onFinished, onFormSubmit }: GoalFormPro
                     toYear={new Date().getFullYear() + 10}
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setIsCalendarOpen(false);
+                    }}
                     disabled={(date) => date < new Date()}
                     initialFocus
                   />

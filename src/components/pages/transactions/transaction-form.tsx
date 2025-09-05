@@ -54,6 +54,7 @@ export default function TransactionForm({ transaction, categories, onFinished, o
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -169,7 +170,7 @@ export default function TransactionForm({ transaction, categories, onFinished, o
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Date</FormLabel>
-              <Popover>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -191,7 +192,10 @@ export default function TransactionForm({ transaction, categories, onFinished, o
                     toYear={new Date().getFullYear()}
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                        field.onChange(date);
+                        setIsCalendarOpen(false);
+                    }}
                     disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                     initialFocus
                   />
