@@ -98,6 +98,7 @@ export default function LoginPage() {
 
   const onSubmit = (values: FormValues) => {
     startTransition(async () => {
+      const errorMessage = errorDialogues[Math.floor(Math.random() * errorDialogues.length)];
       try {
         const user = await getUserByUsername(values.username, values.password);
         if (user) {
@@ -109,7 +110,6 @@ export default function LoginPage() {
           });
           router.push('/dashboard');
         } else {
-            const errorMessage = errorDialogues[Math.floor(Math.random() * errorDialogues.length)];
             toast({
                 variant: 'destructive',
                 title: 'Error',
@@ -120,7 +120,7 @@ export default function LoginPage() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong during login.',
+          description: errorMessage,
         });
       }
     });
