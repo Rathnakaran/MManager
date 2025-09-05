@@ -16,11 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { Budget } from '@/types';
-import { useState, useTransition } from 'react';
-import { suggestIcon } from '@/ai/flows/ai-icon-suggestion';
-import { cn } from '@/lib/utils';
-import { Lightbulb, RotateCw } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTransition } from 'react';
 
 const formSchema = z.object({
   category: z.string().min(2, { message: 'Category name must be at least 2 characters.' }),
@@ -37,10 +33,7 @@ interface BudgetFormProps {
 }
 
 export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetFormProps) {
-  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [isSuggesting, setIsSuggesting] = useState(false);
-  const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,37 +54,6 @@ export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetF
       form.reset();
     });
   };
-
-  const handleSuggestIcon = () => {
-    const categoryName = form.getValues('category');
-    if (!categoryName) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Please enter a category name first.' });
-        return;
-    }
-    
-    setIsSuggesting(true);
-    setSuggestionError(null);
-    startTransition(async () => {
-        try {
-            const result = await suggestIcon({ categoryName });
-            if (result.iconName) {
-                form.setValue('icon', result.iconName, { shouldValidate: true });
-                toast({ title: 'Suggestion applied!', description: `Icon set to "${result.iconName}".`});
-            } else {
-                toast({ title: 'No suggestion found', description: 'Could not determine an icon.'});
-            }
-        } catch (error: any) {
-             if (error.message && error.message.includes('503 Service Unavailable')) {
-                setSuggestionError('The AI model is overloaded. Please try again in a moment.');
-            } else {
-                setSuggestionError('Failed to get icon suggestion. Please try again.');
-            }
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to get icon suggestion.' });
-        } finally {
-            setIsSuggesting(false);
-        }
-    });
-  }
 
   return (
     <Form {...form}>
@@ -130,32 +92,17 @@ export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetF
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>Icon Name (from Lucide React)</FormLabel>
-                    <div className="flex gap-2">
+                    <FormControl>
                         <Input placeholder="e.g., ShoppingCart (optional)" {...field} />
-                        <Button type="button" variant="outline" size="icon" onClick={handleSuggestIcon} disabled={isSuggesting || isPending}>
-                            <Lightbulb className={cn("h-4 w-4", isSuggesting && "animate-pulse")} />
-                        </Button>
-                    </div>
+                    </FormControl>
                     <FormMessage />
                 </FormItem>
             )}
         />
-
-        {suggestionError && (
-            <Alert variant="destructive" className="flex items-center justify-between">
-                <AlertDescription className="text-xs">
-                    {suggestionError}
-                </AlertDescription>
-                 <Button type="button" variant="ghost" size="sm" onClick={handleSuggestIcon} disabled={isSuggesting || isPending}>
-                    <RotateCw className={`mr-2 h-3 w-3 ${isSuggesting ? 'animate-spin' : ''}`} />
-                    Retry
-                </Button>
-            </Alert>
-        )}
         
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onFinished}>Cancel</Button>
-            <Button type="submit" disabled={isPending || isSuggesting}>
+            <Button type="submit" disabled={isPending}>
               {isPending ? 'Saving...' : (budget ? 'Save Changes' : 'Add Budget')}
             </Button>
         </div>
