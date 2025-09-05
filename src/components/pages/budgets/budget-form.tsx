@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { Budget } from '@/types';
 import { useTransition } from 'react';
+import { IconPicker } from '@/components/ui/icon-picker';
 
 const formSchema = z.object({
   category: z.string().min(2, { message: 'Category name must be at least 2 characters.' }),
@@ -91,9 +92,12 @@ export default function BudgetForm({ budget, onFinished, onFormSubmit }: BudgetF
             name="icon"
             render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Icon Name (from Lucide React)</FormLabel>
-                    <FormControl>
-                        <Input placeholder="e.g., ShoppingCart (optional)" {...field} />
+                    <FormLabel>Icon (Optional)</FormLabel>
+                     <FormControl>
+                        <IconPicker 
+                            value={field.value}
+                            onChange={field.onChange}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
