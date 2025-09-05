@@ -23,12 +23,14 @@ interface AiAdvisorProps {
 
 export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiAdvisorProps) {
   const [advice, setAdvice] = useState<FinancialAdviceOutput | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   const fetchAdvice = () => {
     startTransition(async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const result = await getFinancialAdvice({
           totalSpent,
@@ -39,10 +41,11 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
       } catch (error: any) {
         console.error('Failed to get financial advice:', error);
         if (error.message && error.message.includes('503 Service Unavailable')) {
-          setAdvice({ summary: 'The AI Advisor is currently busy. Please try again in a moment.' });
+          setError('The AI Advisor is currently busy. Please try again in a moment.');
         } else {
-          setAdvice({ summary: 'Could not load financial advice. You may have hit the daily free tier limit.' });
+          setError('Could not load financial advice. You may have hit the daily free tier limit.');
         }
+        setAdvice(null);
       } finally {
         setIsLoading(false);
       }
@@ -71,6 +74,8 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
             <div className='w-full'>
                 <MiniLoader />
             </div>
+        ) : error ? (
+            <p className="text-destructive text-sm">{error}</p>
         ) : advice ? (
           <div>
             <p className="text-muted-foreground">{advice.summary}</p>
