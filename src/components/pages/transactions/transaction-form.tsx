@@ -48,7 +48,7 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
   categories: { budgetCategories: string[], goalCategories: string[] };
   onFinished: () => void;
-  onFormSubmit: (values: Omit<Transaction, 'id' | 'userId'>, id?: string) => void;
+  onFormSubmit: (values: Omit<Transaction, 'id' | 'userId' | 'date'> & { date: string }, id?: string) => void;
 }
 
 export default function TransactionForm({ transaction, categories, onFinished, onFormSubmit }: TransactionFormProps) {
@@ -72,7 +72,7 @@ export default function TransactionForm({ transaction, categories, onFinished, o
     startTransition(() => {
         const transactionData = {
           ...values,
-          date: values.date.toISOString().split('T')[0],
+          date: format(values.date, 'yyyy-MM-dd'),
         };
         onFormSubmit(transactionData, transaction?.id);
         form.reset({

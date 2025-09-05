@@ -12,17 +12,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
 const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC' // To prevent off-by-one day errors
-  });
+  format(parseISO(dateString), 'PPP');
 
 export const columns = (onEdit: (transaction: Transaction) => void, onDelete: (id: string) => void): ColumnDef<Transaction>[] => [
   {

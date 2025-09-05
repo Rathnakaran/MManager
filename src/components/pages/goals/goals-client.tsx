@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Progress } from '@/components/ui/progress';
 import GoalForm from './goal-form';
 import AppLoader from '@/components/layout/app-loader';
+import { format, parseISO } from 'date-fns';
 
 interface GoalsClientProps {}
 
@@ -94,7 +95,7 @@ export default function GoalsClient({}: GoalsClientProps) {
     const goalData = {
         ...values,
         userId,
-        targetDate: values.targetDate.toISOString().split('T')[0],
+        targetDate: format(values.targetDate, 'yyyy-MM-dd'),
     };
 
     startTransition(async () => {
@@ -116,7 +117,7 @@ export default function GoalsClient({}: GoalsClientProps) {
   }
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const formatDateDisplay = (dateString: string) => format(parseISO(dateString), 'PPP');
 
   if (isLoading) {
     return (
@@ -169,7 +170,7 @@ export default function GoalsClient({}: GoalsClientProps) {
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
                         <div className='space-y-1.5'>
                             <CardTitle className="text-lg font-medium">{goal.name}</CardTitle>
-                            <CardDescription>Target: {formatDate(goal.targetDate)}</CardDescription>
+                            <CardDescription>Target: {formatDateDisplay(goal.targetDate)}</CardDescription>
                         </div>
                         <DropdownMenu>
                         <DropdownMenuTrigger asChild>
