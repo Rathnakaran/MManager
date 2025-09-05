@@ -48,7 +48,7 @@ export function AiAdvisor({ totalSpent, remainingBudget, expenseBreakdown }: AiA
   useEffect(() => {
     fetchAdvice();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalSpent, remainingBudget, expenseBreakdown]);
+  }, []);
 
   return (
     <Card>
