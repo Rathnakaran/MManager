@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Target } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { addGoal, deleteGoal, updateGoal, getGoals } from '@/lib/actions';
+import { addGoal, deleteGoal, updateGoal, getGoals, getUserIdFromCookie } from '@/lib/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
@@ -33,14 +33,17 @@ export default function GoalsClient({}: GoalsClientProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const userId = localStorage.getItem('loggedInUserId');
-    if (!userId) return;
+    const fetchData = async () => {
+        const userId = await getUserIdFromCookie();
+        if (!userId) return;
 
-    setIsLoading(true);
-    getGoals(userId)
-      .then(setGoals)
-      .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to load goals.' }))
-      .finally(() => setIsLoading(false));
+        setIsLoading(true);
+        getGoals(userId)
+        .then(setGoals)
+        .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to load goals.' }))
+        .finally(() => setIsLoading(false));
+    }
+    fetchData();
 
     setTitle(goalTitles[Math.floor(Math.random() * goalTitles.length)]);
   }, [toast]);
@@ -82,7 +85,7 @@ export default function GoalsClient({}: GoalsClientProps) {
   };
 
   const onFormSubmit = async (values: Omit<Goal, 'id' | 'userId' | 'targetDate'> & {targetDate: Date}, id?: string) => {
-    const userId = localStorage.getItem('loggedInUserId');
+    const userId = await getUserIdFromCookie();
     if (!userId) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
         return;

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Transaction } from '@/types';
-import { getTransactions } from '@/lib/actions';
+import { getTransactions, getUserIdFromCookie } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import AppLoader from '@/components/layout/app-loader';
 import CalendarView from './calendar-view';
@@ -14,14 +14,17 @@ export default function CalendarClient() {
     const { toast } = useToast();
 
     useEffect(() => {
-        const userId = localStorage.getItem('loggedInUserId');
-        if (!userId) return;
+        const fetchData = async () => {
+            const userId = await getUserIdFromCookie();
+            if (!userId) return;
 
-        setIsLoading(true);
-        getTransactions(userId)
-            .then(setTransactions)
-            .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transactions.' }))
-            .finally(() => setIsLoading(false));
+            setIsLoading(true);
+            getTransactions(userId)
+                .then(setTransactions)
+                .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch transactions.' }))
+                .finally(() => setIsLoading(false));
+        };
+        fetchData();
     }, [toast]);
 
     if (isLoading) {

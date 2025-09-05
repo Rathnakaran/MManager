@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getData } from '@/lib/actions';
+import { getData, getUserIdFromCookie } from '@/lib/actions';
 import AppLoader from '@/components/layout/app-loader';
 
 interface DashboardClientProps {}
@@ -47,24 +47,27 @@ export default function DashboardClient({}: DashboardClientProps) {
   const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
 
   useEffect(() => {
-    const userId = localStorage.getItem('loggedInUserId');
-    if (!userId) return;
+    const fetchData = async () => {
+        const userId = await getUserIdFromCookie();
+        if (!userId) return;
 
-    setIsLoading(true);
-    getData(userId)
-      .then(({ transactions, budgets, goals, recurringTransactions }) => {
-        setTransactions(transactions);
-        setBudgets(budgets);
-        setGoals(goals);
-        setRecurringTransactions(recurringTransactions);
-      })
-      .catch(() => {
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to load dashboard data.' });
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+        setIsLoading(true);
+        getData(userId)
+        .then(({ transactions, budgets, goals, recurringTransactions }) => {
+            setTransactions(transactions);
+            setBudgets(budgets);
+            setGoals(goals);
+            setRecurringTransactions(recurringTransactions);
+        })
+        .catch(() => {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to load dashboard data.' });
+        })
+        .finally(() => {
+            setIsLoading(false);
+        });
+    }
     
+    fetchData();
     // This runs only on the client, after the initial render, to avoid hydration mismatch
     const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
     setWelcomeMessage(welcomeMessages[randomIndex]);

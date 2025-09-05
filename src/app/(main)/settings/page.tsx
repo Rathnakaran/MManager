@@ -49,7 +49,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { createUser, getUserById, updateUserPassword, getUsers, updateUser, deleteUser } from '@/lib/actions';
+import { createUser, getUserById, updateUserPassword, getUsers, updateUser, deleteUser, getUserIdFromCookie } from '@/lib/actions';
 import { Separator } from '@/components/ui/separator';
 import type { User } from '@/types';
 import { Badge } from '@/components/ui/badge';
@@ -111,7 +111,7 @@ export default function SettingsPage() {
   const [isPending, startTransition] = useTransition();
 
   const fetchUsers = async () => {
-    const userId = localStorage.getItem('loggedInUserId');
+    const userId = await getUserIdFromCookie();
     if (!userId) return;
 
     const [fetchedUser, allFetchedUsers] = await Promise.all([

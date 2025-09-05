@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { addBudget, deleteBudget, updateBudget, getBudgets, getTransactions } from '@/lib/actions';
+import { addBudget, deleteBudget, updateBudget, getBudgets, getTransactions, getUserIdFromCookie } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getIconByName } from '@/components/icons';
 import {
@@ -47,7 +47,7 @@ export default function BudgetsClient() {
 
   useEffect(() => {
     const fetchData = async () => {
-        const userId = localStorage.getItem('loggedInUserId');
+        const userId = await getUserIdFromCookie();
         if (!userId) return;
 
         setIsLoading(true);
@@ -107,7 +107,7 @@ export default function BudgetsClient() {
 
   const onFormSubmit = (values: Omit<Budget, 'id' | 'userId'>, id?: string) => {
     startTransition(async () => {
-        const userId = localStorage.getItem('loggedInUserId');
+        const userId = await getUserIdFromCookie();
         if (!userId) {
             toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
             return;

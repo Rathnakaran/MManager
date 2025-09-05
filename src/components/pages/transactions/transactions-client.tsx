@@ -17,7 +17,8 @@ import {
     deleteTransaction,
     getTransactions,
     getBudgetCategories,
-    getGoalCategories
+    getGoalCategories,
+    getUserIdFromCookie
 } from '@/lib/actions';
 import Papa from 'papaparse';
 import AppLoader from '@/components/layout/app-loader';
@@ -44,7 +45,7 @@ export default function TransactionsClient({}: TransactionsClientProps) {
   
   useEffect(() => {
     const fetchData = async () => {
-        const userId = localStorage.getItem('loggedInUserId');
+        const userId = await getUserIdFromCookie();
         if (!userId) return;
 
         setIsLoading(true);
@@ -100,7 +101,7 @@ export default function TransactionsClient({}: TransactionsClientProps) {
 
   const onFormSubmit = (values: Omit<Transaction, 'id' | 'userId'>, id?: string) => {
     startTransition(async () => {
-      const userId = localStorage.getItem('loggedInUserId');
+      const userId = await getUserIdFromCookie();
       if (!userId) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
         return;
@@ -134,10 +135,12 @@ export default function TransactionsClient({}: TransactionsClientProps) {
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    const userId = localStorage.getItem('loggedInUserId');
-    if (!file || !userId) return;
+    if (!file) return;
 
     startTransition(async () => {
+        const userId = await getUserIdFromCookie();
+        if (!userId) return;
+
         Papa.parse(file, {
             header: true,
             skipEmptyLines: true,

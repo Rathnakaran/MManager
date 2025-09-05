@@ -28,7 +28,8 @@ import {
     deleteRecurringTransaction, 
     updateRecurringTransaction,
     getRecurringTransactions, 
-    getBudgetCategories 
+    getBudgetCategories,
+    getUserIdFromCookie
 } from '@/lib/actions';
 import AppLoader from '@/components/layout/app-loader';
 
@@ -46,7 +47,7 @@ export default function RecurringClient({}: RecurringClientProps) {
 
   useEffect(() => {
     const fetchData = async () => {
-        const userId = localStorage.getItem('loggedInUserId');
+        const userId = await getUserIdFromCookie();
         if (!userId) return;
 
         setIsLoading(true);
@@ -97,7 +98,7 @@ export default function RecurringClient({}: RecurringClientProps) {
 
   const onFormSubmit = (values: Omit<RecurringTransaction, 'id' | 'userId'>, id?: string) => {
     startTransition(async () => {
-        const userId = localStorage.getItem('loggedInUserId');
+        const userId = await getUserIdFromCookie();
         if (!userId) {
             toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
             return;

@@ -6,28 +6,27 @@ import AppHeader from '@/components/layout/app-header';
 import AppSidebar from '@/components/layout/app-sidebar';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import AppLoader from '@/components/layout/app-loader';
+import { getUserIdFromCookie } from '@/lib/actions';
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = localStorage.getItem('loggedInUserId');
-    if (!userId) {
-      router.push('/login');
-    } else {
-      setIsAuthenticated(true);
-    }
-  }, [router]);
+    // The middleware handles redirection, so we can just show a loader
+    // until the children (which fetch data) are ready.
+    // A short delay can prevent flashing content.
+    const timer = setTimeout(() => setLoading(false), 250);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (!isAuthenticated) {
+  if (loading) {
     return <AppLoader />;
   }
-
+  
   return (
     <SidebarProvider>
       <Sidebar>

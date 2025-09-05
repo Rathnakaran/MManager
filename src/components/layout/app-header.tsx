@@ -17,7 +17,11 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import type { User } from '@/types';
-import { getUserById } from '@/lib/actions';
+import { getUserById, getUserIdFromCookie } from '@/lib/actions';
+
+const deleteCookie = (name: string) => {
+    document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
 
 export default function AppHeader() {
   const router = useRouter();
@@ -25,14 +29,17 @@ export default function AppHeader() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const userId = localStorage.getItem('loggedInUserId');
-    if (userId) {
-      getUserById(userId).then(setUser);
+    const fetchUser = async () => {
+        const userId = await getUserIdFromCookie();
+        if (userId) {
+          getUserById(userId).then(setUser);
+        }
     }
+    fetchUser();
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('loggedInUserId');
+    deleteCookie('loggedInUserId');
     toast({
       title: 'Logged Out',
       description: '"Poitu varen!" (See you later!)',

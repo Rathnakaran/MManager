@@ -32,6 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Transaction } from '@/types';
 import { useState, useTransition } from 'react';
 import { suggestCategory } from '@/ai/flows/ai-category-suggestion';
+import { getUserIdFromCookie } from '@/lib/actions';
 
 const formSchema = z.object({
   description: z.string().min(2, { message: 'Description must be at least 2 characters.' }),

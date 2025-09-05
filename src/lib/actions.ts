@@ -16,6 +16,15 @@ import {
   where,
 } from 'firebase/firestore';
 import type { Transaction, Budget, Goal, RecurringTransaction, User } from '@/types';
+import { cookies } from 'next/headers';
+
+
+export async function getUserIdFromCookie() {
+    const cookieStore = cookies();
+    const userIdCookie = cookieStore.get('loggedInUserId');
+    return userIdCookie?.value;
+}
+
 
 const getGoalKeyword = (goalName: string) => {
     return goalName.split(' ')[0];

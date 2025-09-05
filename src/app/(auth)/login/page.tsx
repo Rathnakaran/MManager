@@ -33,6 +33,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const setCookie = (name: string, value: string, days: number) => {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -51,7 +61,7 @@ export default function LoginPage() {
       try {
         const user = await getUserByUsername(values.username, values.password);
         if (user) {
-          localStorage.setItem('loggedInUserId', user.id);
+          setCookie('loggedInUserId', user.id, 7); // Set cookie for 7 days
           toast({
             title: 'Success!',
             description: `Welcome back, ${user.username}! "Vaathi Coming!"`,
