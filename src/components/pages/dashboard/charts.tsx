@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useMemo } from 'react';
 
 interface ExpenseChartProps {
@@ -33,6 +33,7 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
       <Card>
         <CardHeader>
           <CardTitle>Expense Breakdown</CardTitle>
+          <CardDescription>A pie chart of where your money went.</CardDescription>
         </CardHeader>
         <CardContent className="flex h-[350px] items-center justify-center">
           <p className="text-muted-foreground">No expense data for this month.</p>
@@ -45,6 +46,7 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
     <Card>
       <CardHeader>
         <CardTitle>Expense Breakdown</CardTitle>
+        <CardDescription>A pie chart of where your money went.</CardDescription>
       </CardHeader>
       <CardContent>
         <div style={{ width: '100%', height: 350 }}>
