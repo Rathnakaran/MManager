@@ -9,19 +9,8 @@
 import { getUserByUsername, seedInitialData } from './actions';
 
 async function main() {
-  console.log('Starting to seed data for admin user...');
-  try {
-    const adminUser = await getUserByUsername('Rathnakaran');
-    if (!adminUser) {
-        console.error("Admin user 'Rathnakaran' not found. Please create this user manually in Firebase Authentication and Firestore `users` collection before seeding.");
-        return;
-    }
-    
-    await seedInitialData(adminUser.id);
-    console.log(`Data seeding process completed for user: ${adminUser.username} (${adminUser.id})`);
-  } catch (error) {
-    console.error('Error seeding data:', error);
-  }
+  console.log('This script is intended for initial development seeding.');
+  console.log('As the app is now live, this script no longer seeds data to avoid overwriting user information.');
 }
 
 main();

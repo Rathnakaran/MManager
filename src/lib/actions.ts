@@ -171,7 +171,7 @@ export async function addTransaction(transactionData: Omit<Transaction, 'id'>): 
   return newTransaction;
 }
 
-export async function updateTransaction(id: string, transactionData: Partial<Omit<Transaction, 'id'>>): Promise<Transaction> {
+export async function updateTransaction(id: string, transactionData: Partial<Omit<Transaction, 'id' | 'userId'>>): Promise<Transaction> {
   const transactionRef = doc(db, 'transactions', id);
   await updateDoc(transactionRef, transactionData);
   revalidatePath('/');
