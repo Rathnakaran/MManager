@@ -24,7 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { getUserByUsername } from '@/lib/actions';
-import { useTransition } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 
 const formSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -32,6 +32,15 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+const welcomeDialogues = [
+  "Welcome Back!",
+  "Vanakkam, Thalaiva!",
+  "Vetri Nichayam!",
+  "En Vazhi, Thani Vazhi.",
+  "Naan Veezhven Endru Ninaithayo?",
+  "Singam Single-a Dhaan Varum."
+];
 
 const setCookie = (name: string, value: string, days: number) => {
     let expires = "";
@@ -47,6 +56,11 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [welcomeMessage, setWelcomeMessage] = useState(welcomeDialogues[0]);
+
+  useEffect(() => {
+    setWelcomeMessage(welcomeDialogues[Math.floor(Math.random() * welcomeDialogues.length)]);
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -87,7 +101,7 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-md mx-4">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold font-headline">Welcome Back!</CardTitle>
+        <CardTitle className="text-2xl font-bold font-headline">{welcomeMessage}</CardTitle>
         <CardDescription>"Kanaku ellam correct-a irukanum!" Login to continue.</CardDescription>
       </CardHeader>
       <CardContent>
